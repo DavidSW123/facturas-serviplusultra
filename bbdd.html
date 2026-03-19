@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Datos OTs - Empresa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #ecf0f1; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        /* Filtros */
+        .filtros { display: flex; gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .filtros input, .filtros select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; }
+        
+        /* Tabla */
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background-color: #2c3e50; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background-color: #f1f2f6; }
+        
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; color: white; }
+        .btn-excel { background-color: #27ae60; }
+        .btn-volver { background-color: #95a5a6; }
+        .btn-peligro { background-color: #e74c3c; padding: 5px 10px; }
+        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div style="text-align: right; margin-bottom: 10px; color: #555; font-size: 0.9em;">
+            <span id="infoUsuarioBBDD"></span>
+        </div>
+
+        <div class="cabecera">
+            <h1>🗄️ Visor de Base de Datos</h1>
+            <div>
+                <button class="btn btn-excel" onclick="exportarExcel()">📊 Exportar a Excel</button>
+                <a href="/" class="btn btn-volver">🔙 Volver al Inicio</a>
+            </div>
+        </div>
+
+        <div class="filtros">
+            <input type="text" id="filtroOT" placeholder="🔍 Buscar por Código OT..." onkeyup="filtrarTabla()">
+            <input type="text" id="filtroMarca" placeholder="🔍 Buscar por Marca..." onkeyup="filtrarTabla()">
+            <select id="filtroEstado" onchange="filtrarTabla()">
+                <option value="TODOS">Todos los Estados</option>
+                <option value="PENDIENTE">Pendientes</option>
+                <option value="HECHO">Hechos</option>
+                <option value="ANULADO">Anulados</option>
+            </select>
+        </div>
+
+        <table id="tablaBBDD">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código OT</th>
+                    <th>Marca</th>
+                    <th>Fecha Encargo</th>
+                    <th>Urgencia</th>
+                    <th>Horas</th>
+                    <th>Técnicos</th>
+                    <th>Materiales (€)</th>
+                    <th>Estado</th>
+                    <th id="colAcciones">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // --- 1. SEGURIDAD Y SESIÓN ---
+        const sesionStr = localStorage.getItem('sesionPlusUltra');
+        if (!sesionStr) {
+            window.location.href = '/login'; // Expulsar si no hay sesión
+        }
+        const sesion = JSON.parse(sesionStr);
+
+        document.getElementById('infoUsuarioBBDD').innerHTML = `👤 <strong>${sesion.username.toUpperCase()}</strong> (${sesion.rol})`;
+
+        // Ocultar la cabecera de "Acciones" si no es admin
+        if(sesion.rol !== 'admin') {
+            document.getElementById('colAcciones').style.display = 'none';
+        }
+
+        // --- 2. LÓGICA DE LA BBDD ---
+        const API_URL = 'http://localhost:3000/api/ot';
+        let datosBBDD = [];
+
+        function cargarDatos() {
+            fetch(API_URL).then(res => res.json()).then(data => {
+                datosBBDD = data;
+                dibujarTabla(datosBBDD);
+            });
+        }
+
+        function dibujarTabla(datos) {
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = '';
+            
+            datos.forEach(ot => {
+                let colorEstado = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'ANULADO' ? '#e74c3c' : '#f1c40f');
+                let colorTexto = ot.estado === 'PENDIENTE' ? '#333' : 'white';
+
+                // Solo pintamos el botón y la celda (<td>) si es administrador
+                let celdaAcciones = sesion.rol === 'admin' 
+                    ? `<td><button class="btn btn-peligro" title="Borrar de la BBDD" onclick="eliminarFila(${ot.id})">🗑️</button></td>` 
+                    : '<td style="display:none;"></td>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${ot.id}</td>
+                        <td><strong>${ot.codigo_ot}</strong></td>
+                        <td>${ot.marca}</td>
+                        <td>${ot.fecha_encargo}</td>
+                        <td>${ot.tipo_urgencia}</td>
+                        <td>${ot.horas}</td>
+                        <td>${ot.num_tecnicos}</td>
+                        <td>${ot.materiales_precio} €</td>
+                        <td><span class="badge" style="background-color: ${colorEstado}; color: ${colorTexto};">${ot.estado}</span></td>
+                        ${celdaAcciones}
+                    </tr>
+                `;
+            });
+        }
+
+        function eliminarFila(id) {
+            if(confirm("⚠ CUIDADO: Estás a punto de borrar esta OT para siempre. ¿Continuar?")) {
+                fetch(`${API_URL}/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'x-rol': sesion.rol } // Enviamos el permiso al cerebro
+                }).then(res => res.json()).then(data => {
+                    if(data.error) alert("❌ " + data.error);
+                    else cargarDatos();
+                });
+            }
+        }
+
+        function filtrarTabla() {
+            const textoOT = document.getElementById('filtroOT').value.toLowerCase();
+            const textoMarca = document.getElementById('filtroMarca').value.toLowerCase();
+            const comboEstado = document.getElementById('filtroEstado').value;
+
+            const filtrados = datosBBDD.filter(ot => {
+                const coincideOT = ot.codigo_ot.toLowerCase().includes(textoOT);
+                const coincideMarca = ot.marca.toLowerCase().includes(textoMarca);
+                const coincideEstado = comboEstado === 'TODOS' || ot.estado === comboEstado;
+                return coincideOT && coincideMarca && coincideEstado;
+            });
+
+            dibujarTabla(filtrados);
+        }
+
+        function exportarExcel() {
+            let tabla = document.getElementById("tablaBBDD");
+            let tablaClon = tabla.cloneNode(true);
+            
+            // Borramos la última columna (Acciones) para que no salga en el Excel
+            if(sesion.rol === 'admin') {
+                for(let i=0; i<tablaClon.rows.length; i++) { tablaClon.rows[i].deleteCell(-1); }
+            }
+
+            let wb = XLSX.utils.table_to_book(tablaClon, {sheet:"Base de Datos OTs"});
+            XLSX.writeFile(wb, "Historial_BBDD_MiEmpresa.xlsx");
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>
