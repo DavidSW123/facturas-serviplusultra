@@ -155,13 +155,13 @@
             
             <div class="factura-header">
                 <div class="datos-empresa">
-                    <img src="logo.png" alt="Logo Empresa" style="max-width: 200px; max-height: 80px; margin-bottom: 10px;">
+                    <img src="/facturasPlusUltra/logo.png" alt="Logo Empresa" style="max-width: 200px; max-height: 80px; margin-bottom: 10px;">
                     
-                    <h3>Tu Empresa S.L.</h3>
-                    <p><strong>NIF:</strong> B-12345678</p>
-                    <p>Calle Falsa 123, Local 4</p>
-                    <p>28000 Madrid, España</p>
-                    <p>info@tuempresa.com | 600 000 000</p>
+                    <h3>ServiPlusUltra Solutions S.L.</h3>
+                    <p><strong>CIF:</strong> B-26892760</p>
+                    <p>Carrer d'Aribau 168, 1-1</p>
+                    <p>08036 Barcelona, España</p>
+                    <p>serviplusultrasolutionssl@gmail.com | 600 000 000</p>
                 </div>
                 <div class="datos-factura">
                     <h2>FACTURA</h2>
@@ -254,8 +254,7 @@
         if (!sesionStr) window.location.href = '/login';
         const sesion = JSON.parse(sesionStr);
         const imgDefecto = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
-        const API_URL = 'http://localhost:3000/api/ot';
-        
+        const API_URL = '/api/ot';        
         // Variables Globales
         let otsGlobal = [], logsGlobal = [], lineasFactura = [], otActualId = null, otActualCodigo = '';
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
@@ -311,7 +310,7 @@
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                fetch('http://localhost:3000/api/usuarios/foto', { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ username: sesion.username, foto: e.target.result }) })
+                fetch('/api/usuarios/foto', { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ username: sesion.username, foto: e.target.result }) })
                 .then(res => res.json()).then(() => {
                     sesion.foto = e.target.result; localStorage.setItem('sesionPlusUltra', JSON.stringify(sesion));
                     document.getElementById('topAvatar').src = e.target.result; document.getElementById('menuAvatar').src = e.target.result;
@@ -427,7 +426,7 @@
                 total: parseFloat(document.getElementById('factTotal').innerText)
             };
             // Enviar al servidor para generar la factura real y el QR
-            fetch('http://localhost:3000/api/factura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosFactura) })
+            fetch('/api/factura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosFactura) })
             .then(res => res.json()).then(data => {
                 if(data.error) alert("❌ " + data.error);
                 else {
@@ -442,7 +441,7 @@
         }
 
         // === 5. AUDITORÍA (LOGS) Y MODO STANDBY ===
-        function abrirLogs() { fetch('http://localhost:3000/api/logs').then(res => res.json()).then(data => { logsGlobal = data; renderizarLogs(); abrirModal('modalLogs'); }); }
+        function abrirLogs() { fetch('/api/logs').then(res => res.json()).then(data => { logsGlobal = data; renderizarLogs(); abrirModal('modalLogs'); }); }
 
         function renderizarLogs() {
             const fAccion = document.getElementById('filtroLogAccion').value;
@@ -487,7 +486,7 @@
                 if (motivo === null || motivo.trim() === "") { alert("Debes introducir un motivo."); return; }
             } else { if(!confirm(`¿Deseas APROBAR esta petición?`)) return; }
 
-            fetch(`http://localhost:3000/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion, motivo }) })
+            fetch(`/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion, motivo }) })
             .then(res => res.json()).then(data => { alert(data.mensaje); abrirLogs(); cargarOTs(); });
         }
 
@@ -517,7 +516,7 @@
 
             const nuevosDatos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('e_horas').value), num_tecnicos: parseInt(document.getElementById('e_num_tecnicos').value), marca: document.getElementById('e_marca').value, tipo_urgencia: document.getElementById('e_tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('e_materiales_precio').value) };
             
-            fetch(`http://localhost:3000/api/logs/${id}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ nuevosDatos }) })
+            fetch(`api/logs/${id}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ nuevosDatos }) })
             .then(res => res.json()).then(data => {
                 if(data.error) alert("❌ " + data.error);
                 else { alert("✅ " + data.mensaje); cerrarModal('modalEditarLog'); abrirLogs(); }
@@ -528,7 +527,7 @@
         function guardarPassword() {
             const oldP = document.getElementById('oldPass').value;
             const newP = document.getElementById('newPass').value;
-            fetch('http://localhost:3000/api/usuarios/password', {
+            fetch('/api/usuarios/password', {
                 method: 'PUT', headers: headersSeguridad,
                 body: JSON.stringify({ username: sesion.username, oldPass: oldP, newPass: newP })
             }).then(res => res.json()).then(data => {
@@ -540,7 +539,7 @@
         function crearTecnico() {
             const user = document.getElementById('newTecUser').value;
             const pass = document.getElementById('newTecPass').value;
-            fetch('http://localhost:3000/api/usuarios/tecnico', {
+            fetch('/api/usuarios/tecnico', {
                 method: 'POST', headers: headersSeguridad,
                 body: JSON.stringify({ username: user, password: pass })
             }).then(res => res.json()).then(data => {
