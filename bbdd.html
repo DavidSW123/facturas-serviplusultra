@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base de Datos OTs - Empresa</title>
+    <title>Base de Datos OTs - ServiPlusUltra</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #ecf0f1; padding: 20px; color: #333; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #ecf0f1; padding: 20px; color: #333; margin: 0; }
+        /* Añadido overflow-x para que en el iPhone se pueda deslizar la tabla hacia los lados */
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow-x: auto; }
         h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        .cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         
         /* Filtros */
-        .filtros { display: flex; gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .filtros input, .filtros select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; }
+        .filtros { display: flex; gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filtros input, .filtros select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; min-width: 150px; }
         
         /* Tabla */
-        table { width: 100%; border-collapse: collapse; background: white; }
+        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
         th { background-color: #2c3e50; color: white; padding: 12px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
         tr:hover { background-color: #f1f2f6; }
         
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; color: white; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; color: white; display: inline-block; text-align: center; }
         .btn-excel { background-color: #27ae60; }
         .btn-volver { background-color: #95a5a6; }
         .btn-peligro { background-color: #e74c3c; padding: 5px 10px; }
@@ -36,8 +37,8 @@
         </div>
 
         <div class="cabecera">
-            <h1>🗄️ Visor de Base de Datos</h1>
-            <div>
+            <h1 style="margin: 0;">🗄️ Visor de Base de Datos</h1>
+            <div style="display: flex; gap: 10px;">
                 <button class="btn btn-excel" onclick="exportarExcel()">📊 Exportar a Excel</button>
                 <a href="/" class="btn btn-volver">🔙 Volver al Inicio</a>
             </div>
@@ -59,7 +60,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Código OT</th>
-                    <th>Marca</th>
+                    <th>Cliente</th> <th>Marca</th>
                     <th>Fecha Encargo</th>
                     <th>Urgencia</th>
                     <th>Horas</th>
@@ -70,7 +71,8 @@
                 </tr>
             </thead>
             <tbody id="cuerpoTabla">
-                </tbody>
+                <tr><td colspan="11" style="text-align:center;">Cargando datos desde la nube...</td></tr>
+            </tbody>
         </table>
     </div>
 
@@ -90,19 +92,34 @@
         }
 
         // --- 2. LÓGICA DE LA BBDD ---
-        const API_URL = 'http://localhost:3000/api/ot';
         let datosBBDD = [];
+        let clientesGlobal = []; // Para guardar los nombres de los clientes
 
-        function cargarDatos() {
-            fetch(API_URL).then(res => res.json()).then(data => {
-                datosBBDD = data;
+        async function cargarDatos() {
+            try {
+                // Descargamos clientes primero
+                const resClientes = await fetch('/api/clientes');
+                clientesGlobal = await resClientes.json();
+
+                // Descargamos OTs
+                const resOT = await fetch('/api/ot');
+                datosBBDD = await resOT.json();
+                
                 dibujarTabla(datosBBDD);
-            });
+            } catch(e) {
+                console.error("Error al cargar BBDD:", e);
+                document.getElementById('cuerpoTabla').innerHTML = '<tr><td colspan="11" style="color:red; text-align:center;">Error cargando datos.</td></tr>';
+            }
         }
 
         function dibujarTabla(datos) {
             const tbody = document.getElementById('cuerpoTabla');
             tbody.innerHTML = '';
+            
+            if(datos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">No hay OTs que coincidan con la búsqueda.</td></tr>';
+                return;
+            }
             
             datos.forEach(ot => {
                 let colorEstado = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'ANULADO' ? '#e74c3c' : '#f1c40f');
@@ -113,15 +130,26 @@
                     ? `<td><button class="btn btn-peligro" title="Borrar de la BBDD" onclick="eliminarFila(${ot.id})">🗑️</button></td>` 
                     : '<td style="display:none;"></td>';
 
+                // Buscar el nombre del cliente
+                let cliente = clientesGlobal.find(c => c.id === ot.cliente_id);
+                let nombreCliente = cliente ? cliente.nombre : 'Consumidor Final';
+
+                // Mostrar los nombres de los técnicos o el número
+                let tecnicos = ot.tecnicos_nombres ? ot.tecnicos_nombres : ot.num_tecnicos;
+
+                // Formatear la fecha para quitar la "T"
+                let fechaLimpia = ot.fecha_encargo ? ot.fecha_encargo.replace('T', ' ') : '';
+
                 tbody.innerHTML += `
                     <tr>
                         <td>${ot.id}</td>
                         <td><strong>${ot.codigo_ot}</strong></td>
+                        <td>${nombreCliente}</td>
                         <td>${ot.marca}</td>
-                        <td>${ot.fecha_encargo}</td>
+                        <td>${fechaLimpia}</td>
                         <td>${ot.tipo_urgencia}</td>
                         <td>${ot.horas}</td>
-                        <td>${ot.num_tecnicos}</td>
+                        <td>${tecnicos}</td>
                         <td>${ot.materiales_precio} €</td>
                         <td><span class="badge" style="background-color: ${colorEstado}; color: ${colorTexto};">${ot.estado}</span></td>
                         ${celdaAcciones}
@@ -132,9 +160,12 @@
 
         function eliminarFila(id) {
             if(confirm("⚠ CUIDADO: Estás a punto de borrar esta OT para siempre. ¿Continuar?")) {
-                fetch(`${API_URL}/${id}`, { 
+                fetch(`/api/ot/${id}`, { 
                     method: 'DELETE',
-                    headers: { 'x-rol': sesion.rol } // Enviamos el permiso al cerebro
+                    headers: { 
+                        'x-rol': sesion.rol,
+                        'x-user': sesion.username // Añadido para que el servidor sepa quién borra
+                    } 
                 }).then(res => res.json()).then(data => {
                     if(data.error) alert("❌ " + data.error);
                     else cargarDatos();
@@ -167,7 +198,10 @@
             }
 
             let wb = XLSX.utils.table_to_book(tablaClon, {sheet:"Base de Datos OTs"});
-            XLSX.writeFile(wb, "Historial_BBDD_MiEmpresa.xlsx");
+            
+            // Le ponemos la fecha de hoy al Excel
+            const fechaHoy = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Historial_ServiPlusUltra_${fechaHoy}.xlsx`);
         }
 
         cargarDatos();
