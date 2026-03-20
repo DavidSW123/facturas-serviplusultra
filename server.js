@@ -29,17 +29,18 @@ async function inicializarDB() {
         await db.execute(`CREATE TABLE IF NOT EXISTS ordenes_trabajo (id INTEGER PRIMARY KEY AUTOINCREMENT, codigo_ot TEXT UNIQUE NOT NULL, fecha_encargo TEXT, fecha_completada TEXT, horas REAL, num_tecnicos INTEGER, marca TEXT, tipo_urgencia TEXT, materiales_precio REAL, estado TEXT DEFAULT 'PENDIENTE')`);
         await db.execute(`CREATE TABLE IF NOT EXISTS facturas (id INTEGER PRIMARY KEY AUTOINCREMENT, ot_id INTEGER, base_imponible REAL, iva REAL, total REAL, qr_data TEXT, fecha_emision TEXT, FOREIGN KEY (ot_id) REFERENCES ordenes_trabajo (id))`);
         await db.execute(`CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario TEXT, accion TEXT, referencia TEXT, datos TEXT, estado TEXT, fecha TEXT)`);
-        
-        // NUEVA TABLA DE CLIENTES Y ACTUALIZACIÓN DE OTs
         await db.execute(`CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, nif TEXT, direccion TEXT, email TEXT, telefono TEXT, logo TEXT, estado TEXT DEFAULT 'PENDIENTE')`);
+        
+        // Actualizaciones de tablas
         try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN cliente_id INTEGER`); } catch (e) { /* Ya existe */ }
+        try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN tecnicos_nombres TEXT DEFAULT ''`); } catch (e) { /* Ya existe */ }
 
         const res = await db.execute("SELECT count(*) as count FROM usuarios");
         if (res.rows[0].count === 0) {
             await db.execute(`INSERT INTO usuarios (username, password, rol) VALUES ('Giancarlo', 'gian123', 'admin'), ('David', 'dav123', 'director'), ('Kevin', 'kev123', 'director')`);
             console.log('🔐 Usuarios jefe creados.');
         }
-        console.log('✅ Base de datos Turso conectada y lista con módulo CRM.');
+        console.log('✅ Base de datos Turso conectada y lista con módulo CRM y Técnicos.');
     } catch (error) { console.error('❌ Error al conectar:', error); }
 }
 inicializarDB();
@@ -77,6 +78,9 @@ app.post('/api/usuarios/tecnico', async (req, res) => {
     if (req.headers['x-rol'] !== 'admin' && req.headers['x-rol'] !== 'director') return res.status(403).json({ error: 'Sin permisos' });
     try { await db.execute({ sql: `INSERT INTO usuarios (username, password, rol) VALUES (?, ?, 'tecnico')`, args: [req.body.username, req.body.password] }); res.json({ mensaje: 'Técnico creado' }); } catch (e) { res.status(500).json({ error: 'El usuario ya existe' }); }
 });
+app.get('/api/usuarios/nombres', async (req, res) => {
+    try { const r = await db.execute("SELECT username, rol FROM usuarios ORDER BY rol, username"); res.json(r.rows); } catch (e) { res.status(500).json({ error: 'Error' }); }
+});
 
 // --- API CLIENTES (CRM) ---
 app.get('/api/clientes', async (req, res) => {
@@ -110,7 +114,7 @@ app.post('/api/ot', async (req, res) => {
     }
     const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE';
     try {
-        const r = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null] });
+        const r = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] });
         await registrarLog(user, 'Añadir OT', `OT: ${datos.codigo_ot}`, datos, 'APROBADO');
         res.json({ mensaje: 'OT guardada', id: Number(r.lastInsertRowid) });
     } catch (e) { res.status(500).json({ error: 'Código OT duplicado.' }); }
@@ -157,7 +161,7 @@ app.put('/api/logs/:id/resolver', async (req, res) => {
         const datos = JSON.parse(log.datos);
         if (log.accion === 'Añadir OT') {
             const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE';
-            await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null] });
+            await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] });
         } else if (log.accion === 'Eliminar OT') { await db.execute({ sql: `DELETE FROM ordenes_trabajo WHERE id = ?`, args: [datos.id] });
         } else if (log.accion === 'Editar OT') { await db.execute({ sql: `UPDATE ordenes_trabajo SET estado = ? WHERE id = ?`, args: [datos.nuevoEstado, datos.id] }); }
         
