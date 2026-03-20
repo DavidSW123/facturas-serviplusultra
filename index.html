@@ -2,8 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Facturas Plus Ultra</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1abc9c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Plus Ultra">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* === ESTILOS GENERALES Y MENÚ === */
@@ -32,7 +40,7 @@
         .avatar-mini:hover { border-color: #1abc9c; transform: scale(1.05); }
 
         .overlay-menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2999; }
-        .side-menu { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: #2c3e50; color: white; transition: right 0.3s ease; z-index: 3000; box-shadow: -4px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .side-menu { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: #2c3e50; color: white; transition: right 0.3s ease; z-index: 3000; box-shadow: -4px 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow-y: auto; }
         .side-menu.open { right: 0; }
         .close-menu { position: absolute; top: 15px; left: 20px; font-size: 30px; cursor: pointer; color: #aaa; }
         
@@ -76,11 +84,53 @@
         .tabla-holded input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         
         .factura-footer { display: flex; justify-content: space-between; margin-top: 50px; align-items: flex-end; }
-        .zona-qr { width: 130px; height: 130px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #aaa; text-align: center; border-radius: 8px; font-size: 0.9em; }
+        .zona-qr { width: 130px; height: 130px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #aaa; text-align: center; border-radius: 8px; font-size: 0.9em; overflow: hidden; }
         
         .totales-caja { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: right; border: 1px solid #ddd; min-width: 280px; }
         .totales-caja p { margin: 8px 0; font-size: 1.1em; color: #555; }
         .totales-caja h3 { margin: 15px 0 0 0; color: #2c3e50; font-size: 1.8em; border-top: 2px solid #ccc; padding-top: 15px; }
+
+        /* =========================================
+           MAGIA RESPONSIVE (PARA MÓVILES)
+           ========================================= */
+        @media screen and (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+            
+            .top-bar { flex-direction: column-reverse; gap: 15px; text-align: center; }
+            .top-bar > div:last-child { flex-direction: column; }
+            .top-bar strong { font-size: 1.2em; }
+            
+            .ot-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .sel-estado, .btn-factura, .btn-peligro { width: 100%; text-align: center; margin: 0; box-sizing: border-box; }
+            
+            .tabla-logs-container { overflow-x: auto; white-space: nowrap; }
+            .tabla-holded { display: block; overflow-x: auto; white-space: nowrap; }
+            
+            .modal-content-folio { padding: 20px; width: 95%; margin: 10% auto; }
+            .factura-header { flex-direction: column; gap: 20px; align-items: center; text-align: center; }
+            .datos-empresa h3, .datos-factura h2, .datos-factura { text-align: center; }
+            .factura-footer { flex-direction: column; gap: 30px; align-items: center; }
+            .totales-caja { width: 100%; min-width: auto; }
+        }
+
+        /* =========================================
+           MAGIA DE IMPRESIÓN (SOLO FACTURAS LIMPIAS)
+           ========================================= */
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .container, .overlay-menu, .side-menu, #modalLogs, #modalEditarLog, #modalPassword, #modalTecnico { display: none !important; }
+            
+            #modalFactura { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; }
+            .modal-content-folio { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; border: none !important; }
+            
+            .close-modal, .btn-secundario, .btn-save, .btn-peligro, th:last-child, td:last-child { display: none !important; }
+            
+            .tabla-holded input { border: none !important; background: transparent !important; padding: 0 !important; font-family: inherit; font-size: inherit; color: black !important; }
+            ::-webkit-inner-spin-button, ::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        }
     </style>
 </head>
 <body>
@@ -156,7 +206,6 @@
             <div class="factura-header">
                 <div class="datos-empresa">
                     <img src="/logo.png" alt="Logo Empresa" style="max-width: 240px; max-height: 120px; margin-bottom: 10px;">
-                    
                     <h3>ServiPlusUltra Solutions S.L.</h3>
                     <p><strong>CIF:</strong> B-26892760</p>
                     <p>Carrer d'Aribau 168, 1-1</p>
@@ -182,7 +231,7 @@
                     </tr>
                 </thead>
                 <tbody id="tbodyLineas">
-                    </tbody>
+                </tbody>
             </table>
             
             <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea extra</button>
@@ -208,15 +257,17 @@
             <span class="close-modal" onclick="cerrarModal('modalLogs')">&times;</span>
             <h2 style="margin-top:0;">📝 Historial y Auditoría</h2>
             
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
                 <select id="filtroLogAccion" onchange="renderizarLogs()" style="width:auto;"><option value="TODAS">Todas las Acciones</option><option value="Añadir OT">Añadir OT</option><option value="Editar OT">Editar OT</option><option value="Eliminar OT">Eliminar OT</option></select>
                 <select id="filtroLogEstado" onchange="renderizarLogs()" style="width:auto;"><option value="TODOS">Todos los Estados</option><option value="PENDIENTE">Pendientes</option><option value="APROBADO">Aprobados</option><option value="RECHAZADO">Rechazados</option></select>
             </div>
 
-            <table class="tabla-logs">
-                <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Referencia/Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
-                <tbody id="cuerpoLogs"></tbody>
-            </table>
+            <div class="tabla-logs-container">
+                <table class="tabla-logs">
+                    <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Referencia/Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="cuerpoLogs"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -249,21 +300,18 @@
     <div id="modalTecnico" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalTecnico')">&times;</span><h2 style="margin-top:0;">👷 Crear Técnico</h2><input type="text" id="newTecUser" placeholder="Nombre de usuario" class="form-group"><input type="text" id="newTecPass" placeholder="Contraseña asignada" class="form-group"><button class="btn-save" onclick="crearTecnico()">Crear Usuario</button></div></div>
 
     <script>
-        // === 1. SEGURIDAD, SESIÓN Y CARGA INICIAL ===
+        // === 1. SEGURIDAD Y CARGA INICIAL ===
         const sesionStr = localStorage.getItem('sesionPlusUltra');
         if (!sesionStr) window.location.href = '/login';
         const sesion = JSON.parse(sesionStr);
         const imgDefecto = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
         const API_URL = '/api/ot';        
-        // Variables Globales
+        
         let otsGlobal = [], logsGlobal = [], lineasFactura = [], otActualId = null, otActualCodigo = '';
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
-        
-        // Placeholder dinámico para el año actual
         const prefijoAnoActual = `OT${new Date().getFullYear().toString().slice(-2)}/`;
 
         function inicializarUI() {
-            // Cargar datos de usuario en la barra superior y menú lateral
             document.getElementById('topNombre').innerText = sesion.username;
             document.getElementById('topRol').innerText = sesion.rol;
             document.getElementById('menuNombre').innerText = sesion.username;
@@ -272,21 +320,17 @@
             document.getElementById('topAvatar').src = foto;
             document.getElementById('menuAvatar').src = foto;
             
-            // Configurar placeholder dinámico
             document.getElementById('codigo_ot').placeholder = `${prefijoAnoActual}00001`;
 
-            // Permisos para crear técnicos
             if (sesion.rol === 'admin' || sesion.rol === 'director') {
                 document.getElementById('btnCrearTecnicoArea').innerHTML = `<button class="btn-side" onclick="abrirModal('modalTecnico')">👷 Crear Perfil Técnico</button>`;
             }
-            // Cambiar texto de botón para directores (Modo Standby)
             if (sesion.rol === 'director') {
                 document.getElementById('btnGuardarMain').innerText = "Enviar a Revisión (Standby)";
             }
         }
         inicializarUI();
 
-        // Validaciones en cliente
         function validarFormulario(codigo, fechaIn, fechaOut) {
             if (!codigo.startsWith(prefijoAnoActual)) {
                 alert(`❌ Error: El código de OT debe empezar obligatoriamente por ${prefijoAnoActual}`);
@@ -299,7 +343,7 @@
             return true;
         }
 
-        // === 2. GESTIÓN DEL MENÚ LATERAL Y AVATARES ===
+        // === 2. GESTIÓN MENÚ Y FOTOS ===
         function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
         function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
         function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
@@ -319,18 +363,13 @@
             }; reader.readAsDataURL(file);
         }
 
-        // === 3. GESTIÓN DE OTs (REGISTRO, CAMBIO ESTADO, BORRADO) ===
+        // === 3. GESTIÓN OTs ===
         function cargarOTs() {
             fetch(API_URL).then(res => res.json()).then(ots => {
                 otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = '';
                 ots.forEach(ot => {
-                    // Solo admin y director pueden pedir borrar
                     let btnBorrar = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`;
-                    
-                    // Solo admin y director pueden cambiar estado
                     let disableSelect = sesion.rol === 'tecnico' ? 'disabled' : '';
-                    
-                    // Botón de Factura solo si está HECHO
                     let btnFactura = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : '';
 
                     document.getElementById('contenedorOTs').innerHTML += `
@@ -369,19 +408,17 @@
             });
         });
 
-        // === 4. LÓGICA DE FACTURACIÓN (Logo, QR, Totales) ===
+        // === 4. FACTURACIÓN Y QR ===
         function abrirGeneradorFactura(id) {
             const ot = otsGlobal.find(o => o.id === id);
             otActualId = ot.id; otActualCodigo = ot.codigo_ot;
             document.getElementById('factOtCode').innerText = ot.codigo_ot;
-            document.getElementById('zonaQR').innerHTML = '<p>QR<br>al emitir</p>';
+            document.getElementById('zonaQR').innerHTML = '<p>El código QR<br>legal<br>aparecerá aquí<br>al emitir</p>';
             document.getElementById('btnEmitir').innerText = 'Emitir Factura Oficial y Generar QR';
             
-            // Poner la fecha de hoy
             const hoy = new Date();
             document.getElementById('factFechaHoy').innerText = hoy.toLocaleDateString('es-ES');
             
-            // Cálculo automático inicial de líneas
             lineasFactura = [
                 { concepto: "Desplazamiento a zona", cantidad: 1, precio: 40.00 },
                 { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 },
@@ -425,15 +462,12 @@
                 iva: parseFloat(document.getElementById('factIva').innerText),
                 total: parseFloat(document.getElementById('factTotal').innerText)
             };
-            // Enviar al servidor para generar la factura real y el QR
             fetch('/api/factura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosFactura) })
             .then(res => res.json()).then(data => {
                 if(data.error) alert("❌ " + data.error);
                 else {
-                    // ¡MAGIA! Muestrame el QR
                     document.getElementById('zonaQR').innerHTML = `<img src="${data.qr_data}" style="width:130px; height:130px;" alt="QR Legal">`;
                     document.getElementById('btnEmitir').innerText = "🖨️ Imprimir Factura (A4)";
-                    // Cambiar función para abrir diálogo de impresión
                     document.getElementById('btnEmitir').onclick = () => window.print();
                     alert("✅ Factura emitida. Ya puedes imprimirla.");
                 }
@@ -455,11 +489,9 @@
                 let botones = '';
                 
                 if (log.estado === 'PENDIENTE') {
-                    // Permitir editar petición si eres Admin o Director
                     if (log.accion === 'Añadir OT' && (sesion.rol === 'admin' || sesion.rol === 'director')) {
                         botones += `<button class="btn-editar" onclick="abrirEditarLog(${log.id})" title="Editar Petición">✏️</button> `;
                     }
-                    // Si es Giancarlo (admin), puede aprobar o rechazar
                     if (sesion.rol === 'admin') {
                         botones += `
                             <button style="background:#27ae60; border:none; color:white; padding:5px 8px; border-radius:3px; cursor:pointer;" onclick="resolverLog(${log.id}, 'APROBADO')" title="Aprobar">✅</button>
@@ -516,14 +548,13 @@
 
             const nuevosDatos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('e_horas').value), num_tecnicos: parseInt(document.getElementById('e_num_tecnicos').value), marca: document.getElementById('e_marca').value, tipo_urgencia: document.getElementById('e_tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('e_materiales_precio').value) };
             
-            fetch(`api/logs/${id}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ nuevosDatos }) })
+            fetch(`/api/logs/${id}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ nuevosDatos }) })
             .then(res => res.json()).then(data => {
                 if(data.error) alert("❌ " + data.error);
                 else { alert("✅ " + data.mensaje); cerrarModal('modalEditarLog'); abrirLogs(); }
             });
         }
 
-        // === 6. MODALES DE CONFIGURACIÓN (Passwords y Técnicos) ===
         function guardarPassword() {
             const oldP = document.getElementById('oldPass').value;
             const newP = document.getElementById('newPass').value;
@@ -548,7 +579,12 @@
             });
         }
 
-        // --- ARRANQUE ---
+        // --- PWA SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+            .then(() => console.log("Service Worker Registrado"));
+        }
+
         cargarOTs();
     </script>
 </body>
