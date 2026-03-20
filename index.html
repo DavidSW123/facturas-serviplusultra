@@ -4,23 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facturas Plus Ultra</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* === ESTILOS GENERALES Y MENÚ === */
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
         .container { max-width: 950px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         h1, h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #1abc9c; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; } label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-save { width: 100%; background-color: #1abc9c; color: white; border: none; padding: 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 20px; font-size: 16px; }
+        .btn-save { width: 100%; background-color: #1abc9c; color: white; border: none; padding: 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 20px; font-size: 16px; transition: 0.3s; }
+        .btn-save:hover { background-color: #16a085; }
         
-        .ot-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .ot-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .ot-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .ot-info { flex-grow: 1; } .actions { display: flex; align-items: center; gap: 10px; }
-        .sel-estado { padding: 8px; border-radius: 5px; font-weight: bold; color: white; border: none; }
+        .sel-estado { padding: 8px; border-radius: 5px; font-weight: bold; color: white; border: none; cursor: pointer; }
         .est-hecho { background-color: #27ae60; } .est-pendiente { background-color: #f1c40f; color: #333; } .est-anulado { background-color: #e74c3c; }
-        .btn-factura { background-color: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-factura { background-color: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-factura:hover { background-color: #2980b9; }
         .btn-peligro { background-color: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-secundario { background-color: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; }
-        .btn-editar { background-color: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-secundario { background-color: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; font-size: 14px; }
+        .btn-editar { background-color: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .avatar-mini { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ccc; cursor: pointer; object-fit: cover; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; }
@@ -42,26 +47,47 @@
         .btn-side:hover { background: #1abc9c; }
         .btn-side-red { background: #e74c3c; text-align: center; font-weight: bold; margin-top: auto; border-radius: 0; padding: 20px; width: 100%; border: none; cursor: pointer; color: white; font-size: 16px; }
 
+        /* === ESTILOS MODALES GENERALES === */
         .modal { display: none; position: fixed; z-index: 4000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); overflow-y: auto; }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 900px; position: relative; }
-        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: #aaa; transition: 0.3s; }
+        .close-modal:hover { color: #333; }
         
+        /* Estilos Tabla de Logs */
         .tabla-logs { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         .tabla-logs th { background: #2c3e50; color: white; padding: 10px; text-align: left; }
         .tabla-logs td { padding: 10px; border-bottom: 1px solid #ddd; }
         .badge-log { padding: 5px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8em; }
         .bg-pend { background-color: #f39c12; } .bg-ok { background-color: #27ae60; } .bg-ko { background-color: #e74c3c; }
 
-        /* Estilos específicos Factura */
-        .totales-caja { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: right; border: 1px solid #ddd; min-width: 250px; }
-        .totales-caja h3 { border-top: 2px solid #ccc; padding-top: 10px; }
+        /* === ESTILOS ESPECÍFICOS FACTURA PROFESIONAL (A4 Folio) === */
+        .modal-content-folio { background-color: #fff; margin: 40px auto; padding: 60px; border-radius: 2px; width: 90%; max-width: 800px; position: relative; box-shadow: 0 5px 25px rgba(0,0,0,0.2); min-height: 800px; color: #333; }
+        
+        .factura-header { display: flex; justify-content: space-between; border-bottom: 2px solid #2c3e50; padding-bottom: 25px; margin-bottom: 35px; }
+        .datos-empresa h3 { margin: 10px 0 5px 0; color: #2c3e50; text-align: left; border: none; padding: 0; }
+        .datos-empresa p { margin: 3px 0; color: #555; font-size: 0.9em; }
+        .datos-factura { text-align: right; }
+        .datos-factura h2 { margin: 0 0 10px 0; color: #1abc9c; border: none; text-align: right; font-size: 2.2em; letter-spacing: 2px; }
+        .datos-factura p { margin: 5px 0; font-size: 1em; }
+
+        .tabla-holded { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .tabla-holded th { border-bottom: 2px solid #2c3e50; padding: 12px 10px; text-align: left; color: #2c3e50; background-color: #f8f9fa; }
+        .tabla-holded td { border-bottom: 1px solid #eee; padding: 10px; }
+        .tabla-holded input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        
+        .factura-footer { display: flex; justify-content: space-between; margin-top: 50px; align-items: flex-end; }
+        .zona-qr { width: 130px; height: 130px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #aaa; text-align: center; border-radius: 8px; font-size: 0.9em; }
+        
+        .totales-caja { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: right; border: 1px solid #ddd; min-width: 280px; }
+        .totales-caja p { margin: 8px 0; font-size: 1.1em; color: #555; }
+        .totales-caja h3 { margin: 15px 0 0 0; color: #2c3e50; font-size: 1.8em; border-top: 2px solid #ccc; padding-top: 15px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="top-bar">
-            <div><a href="/bbdd" class="btn-secundario">🗄️ Abrir Base de Datos</a></div>
+            <div><a href="/bbdd" class="btn-secundario">🗄️ Abrir Base de Datos Completa</a></div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div style="text-align: right; line-height: 1.2;">
                     <strong id="topNombre" style="color: #2c3e50; font-size: 1.1em;"></strong><br>
@@ -84,7 +110,14 @@
             </div>
             <div class="form-group"><label>Marca</label><input type="text" id="marca" required></div>
             <div class="grid-2">
-                <div class="form-group"><label>Urgencia</label><select id="tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div>
+                <div class="form-group">
+                    <label>Urgencia</label>
+                    <select id="tipo_urgencia">
+                        <option value="Verde">🟢 Verde</option>
+                        <option value="Amarillo">🟡 Amarillo</option>
+                        <option value="Rojo">🔴 Rojo</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Materiales (€)</label><input type="number" step="0.01" id="materiales_precio" required></div>
             </div>
             <button type="submit" class="btn-save" id="btnGuardarMain">Guardar Orden de Trabajo</button>
@@ -105,8 +138,8 @@
                 <img id="menuAvatar" src="" class="avatar-large">
                 <div class="avatar-overlay">📸 Subir foto</div>
             </div>
-            <h2 id="menuNombre" style="margin: 0; color: #1abc9c;"></h2>
-            <p id="menuRol" style="margin: 5px 0 0 0; color: #bdc3c7; text-transform: uppercase; font-size: 0.8em;"></p>
+            <h2 id="menuNombre" style="margin: 0; color: #1abc9c;">Nombre</h2>
+            <p id="menuRol" style="margin: 5px 0 0 0; color: #bdc3c7; text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px;">Rol</p>
         </div>
         <div class="menu-items">
             <button class="btn-side" onclick="abrirModal('modalPassword')">🔑 Cambiar Contraseña</button>
@@ -117,37 +150,56 @@
     </div>
 
     <div id="modalFactura" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-content-folio">
             <span class="close-modal" onclick="cerrarModal('modalFactura')">&times;</span>
-            <div style="border-bottom: 2px solid #2c3e50; padding-bottom: 20px; margin-bottom: 20px;">
-                <h2 style="color: #1abc9c; text-align: right; margin:0;">FACTURA BORRADOR</h2>
-                <p style="text-align: right; margin:0;">Ref. OT: <strong id="factOtCode"></strong></p>
+            
+            <div class="factura-header">
+                <div class="datos-empresa">
+                    <img src="logo.png" alt="Logo Empresa" style="max-width: 200px; max-height: 80px; margin-bottom: 10px;">
+                    
+                    <h3>Tu Empresa S.L.</h3>
+                    <p><strong>NIF:</strong> B-12345678</p>
+                    <p>Calle Falsa 123, Local 4</p>
+                    <p>28000 Madrid, España</p>
+                    <p>info@tuempresa.com | 600 000 000</p>
+                </div>
+                <div class="datos-factura">
+                    <h2>FACTURA</h2>
+                    <p style="color: #7f8c8d; font-weight: bold; font-size: 1.1em;">Borrador Editable</p>
+                    <p><strong>Ref. OT:</strong> <span id="factOtCode" style="color:#2c3e50; font-weight: bold;"></span></p>
+                    <p><strong>Fecha Emisión:</strong> <span id="factFechaHoy"></span></p>
+                </div>
             </div>
 
-            <table class="tabla-logs">
+            <table class="tabla-holded">
                 <thead>
                     <tr>
                         <th style="width: 50%;">Concepto</th>
                         <th style="width: 15%;">Cant.</th>
                         <th style="width: 20%;">Precio Ud. (€)</th>
-                        <th style="width: 10%;">Total</th>
+                        <th style="width: 10%; text-align: right;">Total</th>
                         <th style="width: 5%;"></th>
                     </tr>
                 </thead>
-                <tbody id="tbodyLineas"></tbody>
+                <tbody id="tbodyLineas">
+                    </tbody>
             </table>
             
-            <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 10px;">+ Añadir línea extra</button>
+            <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea extra</button>
 
-            <div style="display: flex; justify-content: space-between; margin-top: 40px; align-items: flex-end;">
-                <div id="zonaQR" style="width: 130px; height: 130px; border: 2px dashed #ccc; text-align: center; color: #aaa; display: flex; align-items: center; justify-content: center;">QR</div>
+            <div class="factura-footer">
+                <div class="zona-qr" id="zonaQR">
+                    <p>El código QR<br>legal<br>aparecerá aquí<br>al emitir</p>
+                </div>
+                
                 <div class="totales-caja">
                     <p>Base Imponible: <strong><span id="factBase">0.00</span> €</strong></p>
                     <p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p>
-                    <h3>Total: <span id="factTotal">0.00</span> €</h3>
+                    <h3>Total a Cobrar: <span id="factTotal">0.00</span> €</h3>
                 </div>
             </div>
-            <button class="btn-save" id="btnEmitir" style="margin-top: 20px;" onclick="guardarFacturaDefinitiva()">Emitir Factura Oficial y Generar QR</button>
+
+            <button class="btn-save" id="btnEmitir" style="margin-top: 50px; font-size: 1.2em; padding: 20px;" onclick="guardarFacturaDefinitiva()">Emitir Factura Oficial y Generar QR</button>
         </div>
     </div>
 
@@ -197,6 +249,7 @@
     <div id="modalTecnico" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalTecnico')">&times;</span><h2 style="margin-top:0;">👷 Crear Técnico</h2><input type="text" id="newTecUser" placeholder="Nombre de usuario" class="form-group"><input type="text" id="newTecPass" placeholder="Contraseña asignada" class="form-group"><button class="btn-save" onclick="crearTecnico()">Crear Usuario</button></div></div>
 
     <script>
+        // === 1. SEGURIDAD, SESIÓN Y CARGA INICIAL ===
         const sesionStr = localStorage.getItem('sesionPlusUltra');
         if (!sesionStr) window.location.href = '/login';
         const sesion = JSON.parse(sesionStr);
@@ -206,9 +259,12 @@
         // Variables Globales
         let otsGlobal = [], logsGlobal = [], lineasFactura = [], otActualId = null, otActualCodigo = '';
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
+        
+        // Placeholder dinámico para el año actual
         const prefijoAnoActual = `OT${new Date().getFullYear().toString().slice(-2)}/`;
 
         function inicializarUI() {
+            // Cargar datos de usuario en la barra superior y menú lateral
             document.getElementById('topNombre').innerText = sesion.username;
             document.getElementById('topRol').innerText = sesion.rol;
             document.getElementById('menuNombre').innerText = sesion.username;
@@ -217,11 +273,14 @@
             document.getElementById('topAvatar').src = foto;
             document.getElementById('menuAvatar').src = foto;
             
+            // Configurar placeholder dinámico
             document.getElementById('codigo_ot').placeholder = `${prefijoAnoActual}00001`;
 
+            // Permisos para crear técnicos
             if (sesion.rol === 'admin' || sesion.rol === 'director') {
                 document.getElementById('btnCrearTecnicoArea').innerHTML = `<button class="btn-side" onclick="abrirModal('modalTecnico')">👷 Crear Perfil Técnico</button>`;
             }
+            // Cambiar texto de botón para directores (Modo Standby)
             if (sesion.rol === 'director') {
                 document.getElementById('btnGuardarMain').innerText = "Enviar a Revisión (Standby)";
             }
@@ -241,7 +300,7 @@
             return true;
         }
 
-        // MENÚ LATERAL Y AVATARES
+        // === 2. GESTIÓN DEL MENÚ LATERAL Y AVATARES ===
         function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
         function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
         function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
@@ -256,19 +315,23 @@
                 .then(res => res.json()).then(() => {
                     sesion.foto = e.target.result; localStorage.setItem('sesionPlusUltra', JSON.stringify(sesion));
                     document.getElementById('topAvatar').src = e.target.result; document.getElementById('menuAvatar').src = e.target.result;
+                    alert("✅ Foto actualizada");
                 });
             }; reader.readAsDataURL(file);
         }
 
-        // --- GESTIÓN DE OTs Y FACTURACIÓN ---
+        // === 3. GESTIÓN DE OTs (REGISTRO, CAMBIO ESTADO, BORRADO) ===
         function cargarOTs() {
             fetch(API_URL).then(res => res.json()).then(ots => {
                 otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = '';
                 ots.forEach(ot => {
+                    // Solo admin y director pueden pedir borrar
                     let btnBorrar = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`;
+                    
+                    // Solo admin y director pueden cambiar estado
                     let disableSelect = sesion.rol === 'tecnico' ? 'disabled' : '';
                     
-                    // AQUI ESTÁ EL BOTÓN DE FACTURA QUE FALTABA
+                    // Botón de Factura solo si está HECHO
                     let btnFactura = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : '';
 
                     document.getElementById('contenedorOTs').innerHTML += `
@@ -307,14 +370,19 @@
             });
         });
 
-        // --- FUNCIONES DE FACTURACIÓN (¡Vuelven a la vida!) ---
+        // === 4. LÓGICA DE FACTURACIÓN (Logo, QR, Totales) ===
         function abrirGeneradorFactura(id) {
             const ot = otsGlobal.find(o => o.id === id);
             otActualId = ot.id; otActualCodigo = ot.codigo_ot;
             document.getElementById('factOtCode').innerText = ot.codigo_ot;
-            document.getElementById('zonaQR').innerHTML = 'QR';
+            document.getElementById('zonaQR').innerHTML = '<p>QR<br>al emitir</p>';
             document.getElementById('btnEmitir').innerText = 'Emitir Factura Oficial y Generar QR';
             
+            // Poner la fecha de hoy
+            const hoy = new Date();
+            document.getElementById('factFechaHoy').innerText = hoy.toLocaleDateString('es-ES');
+            
+            // Cálculo automático inicial de líneas
             lineasFactura = [
                 { concepto: "Desplazamiento a zona", cantidad: 1, precio: 40.00 },
                 { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 },
@@ -336,7 +404,7 @@
                         <td><input type="text" value="${linea.concepto}" onchange="actualizarLinea(${index}, 'concepto', this.value)"></td>
                         <td><input type="number" step="0.1" value="${linea.cantidad}" onchange="actualizarLinea(${index}, 'cantidad', this.value)"></td>
                         <td><input type="number" step="0.01" value="${linea.precio}" onchange="actualizarLinea(${index}, 'precio', this.value)"></td>
-                        <td style="text-align:right;">${totalLinea.toFixed(2)} €</td>
+                        <td style="text-align:right; font-weight:bold;">${totalLinea.toFixed(2)} €</td>
                         <td style="text-align:center;"><button class="btn-peligro" style="padding: 5px;" onclick="borrarLineaFactura(${index})">🗑️</button></td>
                     </tr>
                 `;
@@ -358,15 +426,22 @@
                 iva: parseFloat(document.getElementById('factIva').innerText),
                 total: parseFloat(document.getElementById('factTotal').innerText)
             };
+            // Enviar al servidor para generar la factura real y el QR
             fetch('http://localhost:3000/api/factura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosFactura) })
             .then(res => res.json()).then(data => {
-                document.getElementById('zonaQR').innerHTML = `<img src="${data.qr_data}" style="width:130px; height:130px;">`;
-                document.getElementById('btnEmitir').innerText = "🖨️ Imprimir Factura";
-                document.getElementById('btnEmitir').onclick = () => window.print();
+                if(data.error) alert("❌ " + data.error);
+                else {
+                    // ¡MAGIA! Muestrame el QR
+                    document.getElementById('zonaQR').innerHTML = `<img src="${data.qr_data}" style="width:130px; height:130px;" alt="QR Legal">`;
+                    document.getElementById('btnEmitir').innerText = "🖨️ Imprimir Factura (A4)";
+                    // Cambiar función para abrir diálogo de impresión
+                    document.getElementById('btnEmitir').onclick = () => window.print();
+                    alert("✅ Factura emitida. Ya puedes imprimirla.");
+                }
             });
         }
 
-        // --- AUDITORÍA Y STANDBY ---
+        // === 5. AUDITORÍA (LOGS) Y MODO STANDBY ===
         function abrirLogs() { fetch('http://localhost:3000/api/logs').then(res => res.json()).then(data => { logsGlobal = data; renderizarLogs(); abrirModal('modalLogs'); }); }
 
         function renderizarLogs() {
@@ -381,9 +456,11 @@
                 let botones = '';
                 
                 if (log.estado === 'PENDIENTE') {
+                    // Permitir editar petición si eres Admin o Director
                     if (log.accion === 'Añadir OT' && (sesion.rol === 'admin' || sesion.rol === 'director')) {
                         botones += `<button class="btn-editar" onclick="abrirEditarLog(${log.id})" title="Editar Petición">✏️</button> `;
                     }
+                    // Si es Giancarlo (admin), puede aprobar o rechazar
                     if (sesion.rol === 'admin') {
                         botones += `
                             <button style="background:#27ae60; border:none; color:white; padding:5px 8px; border-radius:3px; cursor:pointer;" onclick="resolverLog(${log.id}, 'APROBADO')" title="Aprobar">✅</button>
@@ -447,6 +524,32 @@
             });
         }
 
+        // === 6. MODALES DE CONFIGURACIÓN (Passwords y Técnicos) ===
+        function guardarPassword() {
+            const oldP = document.getElementById('oldPass').value;
+            const newP = document.getElementById('newPass').value;
+            fetch('http://localhost:3000/api/usuarios/password', {
+                method: 'PUT', headers: headersSeguridad,
+                body: JSON.stringify({ username: sesion.username, oldPass: oldP, newPass: newP })
+            }).then(res => res.json()).then(data => {
+                if(data.error) alert("❌ " + data.error);
+                else { alert("✅ " + data.mensaje); cerrarModal('modalPassword'); }
+            });
+        }
+
+        function crearTecnico() {
+            const user = document.getElementById('newTecUser').value;
+            const pass = document.getElementById('newTecPass').value;
+            fetch('http://localhost:3000/api/usuarios/tecnico', {
+                method: 'POST', headers: headersSeguridad,
+                body: JSON.stringify({ username: user, password: pass })
+            }).then(res => res.json()).then(data => {
+                if(data.error) alert("❌ " + data.error);
+                else { alert("✅ " + data.mensaje); cerrarModal('modalTecnico'); }
+            });
+        }
+
+        // --- ARRANQUE ---
         cargarOTs();
     </script>
 </body>
