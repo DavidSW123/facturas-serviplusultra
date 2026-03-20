@@ -16,7 +16,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/bbdd', (req, res) => res.sendFile(path.join(__dirname, 'bbdd.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
-// --- CONEXIÓN A TURSO ---
+// --- CONEXIÓN A LA NUBE (TURSO) ---
 const db = createClient({
     url: process.env.TURSO_DATABASE_URL,
     authToken: process.env.TURSO_AUTH_TOKEN,
@@ -24,30 +24,30 @@ const db = createClient({
 
 async function inicializarDB() {
     try {
-        console.log('🔄 Conectando a Turso...');
+        console.log('🔄 Conectando a Turso en la nube...');
         await db.execute(`CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, rol TEXT NOT NULL, foto TEXT DEFAULT '')`);
         await db.execute(`CREATE TABLE IF NOT EXISTS ordenes_trabajo (id INTEGER PRIMARY KEY AUTOINCREMENT, codigo_ot TEXT UNIQUE NOT NULL, fecha_encargo TEXT, fecha_completada TEXT, horas REAL, num_tecnicos INTEGER, marca TEXT, tipo_urgencia TEXT, materiales_precio REAL, estado TEXT DEFAULT 'PENDIENTE')`);
         await db.execute(`CREATE TABLE IF NOT EXISTS facturas (id INTEGER PRIMARY KEY AUTOINCREMENT, ot_id INTEGER, base_imponible REAL, iva REAL, total REAL, qr_data TEXT, fecha_emision TEXT, FOREIGN KEY (ot_id) REFERENCES ordenes_trabajo (id))`);
         await db.execute(`CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario TEXT, accion TEXT, referencia TEXT, datos TEXT, estado TEXT, fecha TEXT)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, nif TEXT, direccion TEXT, email TEXT, telefono TEXT, logo TEXT, estado TEXT DEFAULT 'PENDIENTE')`);
         
-        // Actualizaciones de tablas
-        try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN cliente_id INTEGER`); } catch (e) { /* Ya existe */ }
-        try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN tecnicos_nombres TEXT DEFAULT ''`); } catch (e) { /* Ya existe */ }
+        // Comprobar y añadir columnas nuevas si no existen (Manejo de errores silencioso)
+        try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN cliente_id INTEGER`); } catch (e) { /* La columna ya existe */ }
+        try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN tecnicos_nombres TEXT DEFAULT ''`); } catch (e) { /* La columna ya existe */ }
 
         const res = await db.execute("SELECT count(*) as count FROM usuarios");
         if (res.rows[0].count === 0) {
             await db.execute(`INSERT INTO usuarios (username, password, rol) VALUES ('Giancarlo', 'gian123', 'admin'), ('David', 'dav123', 'director'), ('Kevin', 'kev123', 'director')`);
             console.log('🔐 Usuarios jefe creados.');
         }
-        console.log('✅ Base de datos Turso conectada y lista con módulo CRM y Técnicos.');
-    } catch (error) { console.error('❌ Error al conectar:', error); }
+        console.log('✅ Base de datos Turso conectada y 100% operativa.');
+    } catch (error) { console.error('❌ Error al inicializar Turso:', error); }
 }
 inicializarDB();
 
 async function registrarLog(usuario, accion, referencia, datos, estado) {
     const fecha = new Date().toLocaleString('es-ES');
-    try { await db.execute({ sql: `INSERT INTO logs (usuario, accion, referencia, datos, estado, fecha) VALUES (?, ?, ?, ?, ?, ?)`, args: [usuario, accion, referencia, JSON.stringify(datos), estado, fecha] }); } catch (e) { console.error(e); }
+    try { await db.execute({ sql: `INSERT INTO logs (usuario, accion, referencia, datos, estado, fecha) VALUES (?, ?, ?, ?, ?, ?)`, args: [usuario, accion, referencia, JSON.stringify(datos), estado, fecha] }); } catch (e) { console.error('Error guardando log:', e); }
 }
 
 function validarOT(datos) {
@@ -114,10 +114,16 @@ app.post('/api/ot', async (req, res) => {
     }
     const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE';
     try {
-        const r = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] });
+        const r = await db.execute({ 
+            sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+            args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] 
+        });
         await registrarLog(user, 'Añadir OT', `OT: ${datos.codigo_ot}`, datos, 'APROBADO');
         res.json({ mensaje: 'OT guardada', id: Number(r.lastInsertRowid) });
-    } catch (e) { res.status(500).json({ error: 'Código OT duplicado.' }); }
+    } catch (e) { 
+        console.error("❌ ERROR CRÍTICO GUARDANDO OT EN TURSO:", e);
+        res.status(500).json({ error: 'Error al guardar en la nube. Revisa la consola de Render.' }); 
+    }
 });
 app.get('/api/ot', async (req, res) => {
     try { const r = await db.execute("SELECT * FROM ordenes_trabajo ORDER BY id DESC"); res.json(r.rows); } catch (e) { res.status(500).json({ error: 'Error' }); }
@@ -166,7 +172,7 @@ app.put('/api/logs/:id/resolver', async (req, res) => {
         } else if (log.accion === 'Editar OT') { await db.execute({ sql: `UPDATE ordenes_trabajo SET estado = ? WHERE id = ?`, args: [datos.nuevoEstado, datos.id] }); }
         
         await db.execute({ sql: `UPDATE logs SET estado = 'APROBADO', referencia = ? WHERE id = ?`, args: [`APROBADO`, id] }); res.json({ mensaje: 'Petición ejecutada' });
-    } catch (e) { res.status(500).json({ error: 'Error ejecutando acción.' }); }
+    } catch (e) { console.error('Error al resolver:', e); res.status(500).json({ error: 'Error ejecutando acción.' }); }
 });
 
 app.post('/api/factura', async (req, res) => {
