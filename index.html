@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Facturas Plus Ultra</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturas ServiPlusUltra</title>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1abc9c">
@@ -116,18 +116,24 @@
             .totales-caja { width: 100%; min-width: auto; }
         }
 
-        /* =========================================
+/* =========================================
            MAGIA DE IMPRESIÓN (SOLO FACTURAS LIMPIAS)
            ========================================= */
         @media print {
-            body { background: white; padding: 0; margin: 0; }
+            /* 1. Forzar que la página vuelva a ser normal, sin scroll bloqueado */
+            html, body { background: white; padding: 0; margin: 0; height: auto !important; overflow: visible !important; }
+            
+            /* 2. Ocultar el resto del programa */
             .container, .overlay-menu, .side-menu, #modalLogs, #modalEditarLog, #modalPassword, #modalTecnico { display: none !important; }
             
-            #modalFactura { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; }
-            .modal-content-folio { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; border: none !important; }
+            /* 3. Convertir el pop-up en un folio plano y normal (CLAVE PARA MÓVIL) */
+            #modalFactura { display: block !important; position: relative !important; left: auto; top: auto; width: 100% !important; height: auto !important; background: white !important; overflow: visible !important; }
+            .modal-content-folio { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; border: none !important; min-height: auto !important; }
             
+            /* 4. Ocultar botones y columna de borrar */
             .close-modal, .btn-secundario, .btn-save, .btn-peligro, th:last-child, td:last-child { display: none !important; }
             
+            /* 5. Limpiar los inputs para que parezcan texto de impresora */
             .tabla-holded input { border: none !important; background: transparent !important; padding: 0 !important; font-family: inherit; font-size: inherit; color: black !important; }
             ::-webkit-inner-spin-button, ::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         }
