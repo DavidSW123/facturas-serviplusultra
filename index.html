@@ -51,6 +51,10 @@
         .tabla-logs td { padding: 10px; border-bottom: 1px solid #ddd; }
         .badge-log { padding: 5px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8em; }
         .bg-pend { background-color: #f39c12; } .bg-ok { background-color: #27ae60; } .bg-ko { background-color: #e74c3c; }
+
+        /* Estilos específicos Factura */
+        .totales-caja { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: right; border: 1px solid #ddd; min-width: 250px; }
+        .totales-caja h3 { border-top: 2px solid #ccc; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -112,6 +116,41 @@
         <button class="btn-side-red" onclick="cerrarSesion()">🚪 CERRAR SESIÓN</button>
     </div>
 
+    <div id="modalFactura" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal('modalFactura')">&times;</span>
+            <div style="border-bottom: 2px solid #2c3e50; padding-bottom: 20px; margin-bottom: 20px;">
+                <h2 style="color: #1abc9c; text-align: right; margin:0;">FACTURA BORRADOR</h2>
+                <p style="text-align: right; margin:0;">Ref. OT: <strong id="factOtCode"></strong></p>
+            </div>
+
+            <table class="tabla-logs">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Concepto</th>
+                        <th style="width: 15%;">Cant.</th>
+                        <th style="width: 20%;">Precio Ud. (€)</th>
+                        <th style="width: 10%;">Total</th>
+                        <th style="width: 5%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyLineas"></tbody>
+            </table>
+            
+            <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 10px;">+ Añadir línea extra</button>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 40px; align-items: flex-end;">
+                <div id="zonaQR" style="width: 130px; height: 130px; border: 2px dashed #ccc; text-align: center; color: #aaa; display: flex; align-items: center; justify-content: center;">QR</div>
+                <div class="totales-caja">
+                    <p>Base Imponible: <strong><span id="factBase">0.00</span> €</strong></p>
+                    <p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p>
+                    <h3>Total: <span id="factTotal">0.00</span> €</h3>
+                </div>
+            </div>
+            <button class="btn-save" id="btnEmitir" style="margin-top: 20px;" onclick="guardarFacturaDefinitiva()">Emitir Factura Oficial y Generar QR</button>
+        </div>
+    </div>
+
     <div id="modalLogs" class="modal">
         <div class="modal-content" style="max-width: 1000px;">
             <span class="close-modal" onclick="cerrarModal('modalLogs')">&times;</span>
@@ -163,10 +202,10 @@
         const sesion = JSON.parse(sesionStr);
         const imgDefecto = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
         const API_URL = 'http://localhost:3000/api/ot';
-        let otsGlobal = [], logsGlobal = [];
+        
+        // Variables Globales
+        let otsGlobal = [], logsGlobal = [], lineasFactura = [], otActualId = null, otActualCodigo = '';
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
-
-        // Configuración inicial de placeholders para el año actual
         const prefijoAnoActual = `OT${new Date().getFullYear().toString().slice(-2)}/`;
 
         function inicializarUI() {
@@ -178,7 +217,6 @@
             document.getElementById('topAvatar').src = foto;
             document.getElementById('menuAvatar').src = foto;
             
-            // Placeholder dinámico (ej: OT26/0001)
             document.getElementById('codigo_ot').placeholder = `${prefijoAnoActual}00001`;
 
             if (sesion.rol === 'admin' || sesion.rol === 'director') {
@@ -190,7 +228,7 @@
         }
         inicializarUI();
 
-        // Validaciones en cliente (UX)
+        // Validaciones en cliente
         function validarFormulario(codigo, fechaIn, fechaOut) {
             if (!codigo.startsWith(prefijoAnoActual)) {
                 alert(`❌ Error: El código de OT debe empezar obligatoriamente por ${prefijoAnoActual}`);
@@ -203,7 +241,7 @@
             return true;
         }
 
-        // MENÚ LATERAL Y AVATARES (Mismos de siempre)
+        // MENÚ LATERAL Y AVATARES
         function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
         function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
         function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
@@ -222,22 +260,27 @@
             }; reader.readAsDataURL(file);
         }
 
-        // GESTIÓN DE OTs
+        // --- GESTIÓN DE OTs Y FACTURACIÓN ---
         function cargarOTs() {
             fetch(API_URL).then(res => res.json()).then(ots => {
                 otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = '';
                 ots.forEach(ot => {
                     let btnBorrar = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`;
                     let disableSelect = sesion.rol === 'tecnico' ? 'disabled' : '';
+                    
+                    // AQUI ESTÁ EL BOTÓN DE FACTURA QUE FALTABA
+                    let btnFactura = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : '';
 
                     document.getElementById('contenedorOTs').innerHTML += `
                         <div class="ot-card">
                             <div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca}</div>
                             <div class="actions">
-                                <select class="sel-estado" ${disableSelect} onchange="cambiarEstado(${ot.id}, this)">
+                                <select class="sel-estado ${ot.estado === 'HECHO' ? 'est-hecho' : (ot.estado === 'ANULADO' ? 'est-anulado' : 'est-pendiente')}" ${disableSelect} onchange="cambiarEstado(${ot.id}, this)">
                                     <option value="PENDIENTE" ${ot.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                                     <option value="HECHO" ${ot.estado === 'HECHO' ? 'selected' : ''}>HECHO</option>
+                                    <option value="ANULADO" ${ot.estado === 'ANULADO' ? 'selected' : ''}>ANULADO</option>
                                 </select>
+                                ${btnFactura}
                                 ${btnBorrar}
                             </div>
                         </div>`;
@@ -264,6 +307,65 @@
             });
         });
 
+        // --- FUNCIONES DE FACTURACIÓN (¡Vuelven a la vida!) ---
+        function abrirGeneradorFactura(id) {
+            const ot = otsGlobal.find(o => o.id === id);
+            otActualId = ot.id; otActualCodigo = ot.codigo_ot;
+            document.getElementById('factOtCode').innerText = ot.codigo_ot;
+            document.getElementById('zonaQR').innerHTML = 'QR';
+            document.getElementById('btnEmitir').innerText = 'Emitir Factura Oficial y Generar QR';
+            
+            lineasFactura = [
+                { concepto: "Desplazamiento a zona", cantidad: 1, precio: 40.00 },
+                { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 },
+                { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }
+            ];
+            renderizarTablaFactura();
+            abrirModal('modalFactura');
+        }
+
+        function renderizarTablaFactura() {
+            const tbody = document.getElementById('tbodyLineas');
+            tbody.innerHTML = ''; let baseImponible = 0;
+
+            lineasFactura.forEach((linea, index) => {
+                const totalLinea = linea.cantidad * linea.precio;
+                baseImponible += totalLinea;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="text" value="${linea.concepto}" onchange="actualizarLinea(${index}, 'concepto', this.value)"></td>
+                        <td><input type="number" step="0.1" value="${linea.cantidad}" onchange="actualizarLinea(${index}, 'cantidad', this.value)"></td>
+                        <td><input type="number" step="0.01" value="${linea.precio}" onchange="actualizarLinea(${index}, 'precio', this.value)"></td>
+                        <td style="text-align:right;">${totalLinea.toFixed(2)} €</td>
+                        <td style="text-align:center;"><button class="btn-peligro" style="padding: 5px;" onclick="borrarLineaFactura(${index})">🗑️</button></td>
+                    </tr>
+                `;
+            });
+            const iva = baseImponible * 0.21;
+            document.getElementById('factBase').innerText = baseImponible.toFixed(2);
+            document.getElementById('factIva').innerText = iva.toFixed(2);
+            document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2);
+        }
+
+        function actualizarLinea(index, campo, valor) { lineasFactura[index][campo] = campo === 'concepto' ? valor : (parseFloat(valor) || 0); renderizarTablaFactura(); }
+        function agregarLineaBlanco() { lineasFactura.push({ concepto: "", cantidad: 1, precio: 0.00 }); renderizarTablaFactura(); }
+        function borrarLineaFactura(index) { lineasFactura.splice(index, 1); renderizarTablaFactura(); }
+
+        function guardarFacturaDefinitiva() {
+            const datosFactura = {
+                ot_id: otActualId, codigo_ot: otActualCodigo,
+                base_imponible: parseFloat(document.getElementById('factBase').innerText),
+                iva: parseFloat(document.getElementById('factIva').innerText),
+                total: parseFloat(document.getElementById('factTotal').innerText)
+            };
+            fetch('http://localhost:3000/api/factura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosFactura) })
+            .then(res => res.json()).then(data => {
+                document.getElementById('zonaQR').innerHTML = `<img src="${data.qr_data}" style="width:130px; height:130px;">`;
+                document.getElementById('btnEmitir').innerText = "🖨️ Imprimir Factura";
+                document.getElementById('btnEmitir').onclick = () => window.print();
+            });
+        }
+
         // --- AUDITORÍA Y STANDBY ---
         function abrirLogs() { fetch('http://localhost:3000/api/logs').then(res => res.json()).then(data => { logsGlobal = data; renderizarLogs(); abrirModal('modalLogs'); }); }
 
@@ -279,11 +381,9 @@
                 let botones = '';
                 
                 if (log.estado === 'PENDIENTE') {
-                    // Si es Añadir OT, todos pueden editarla antes de aprobarla
                     if (log.accion === 'Añadir OT' && (sesion.rol === 'admin' || sesion.rol === 'director')) {
                         botones += `<button class="btn-editar" onclick="abrirEditarLog(${log.id})" title="Editar Petición">✏️</button> `;
                     }
-                    // Si es Giancarlo (admin), puede aprobar o rechazar
                     if (sesion.rol === 'admin') {
                         botones += `
                             <button style="background:#27ae60; border:none; color:white; padding:5px 8px; border-radius:3px; cursor:pointer;" onclick="resolverLog(${log.id}, 'APROBADO')" title="Aprobar">✅</button>
@@ -307,19 +407,13 @@
             let motivo = "";
             if (resolucion === 'RECHAZADO') {
                 motivo = prompt("Por favor, introduce el motivo del rechazo:");
-                if (motivo === null || motivo.trim() === "") {
-                    alert("Debes introducir un motivo para rechazar la petición.");
-                    return;
-                }
-            } else {
-                if(!confirm(`¿Deseas APROBAR esta petición?`)) return;
-            }
+                if (motivo === null || motivo.trim() === "") { alert("Debes introducir un motivo."); return; }
+            } else { if(!confirm(`¿Deseas APROBAR esta petición?`)) return; }
 
             fetch(`http://localhost:3000/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion, motivo }) })
             .then(res => res.json()).then(data => { alert(data.mensaje); abrirLogs(); cargarOTs(); });
         }
 
-        // --- EDITAR PENDIENTES ---
         function abrirEditarLog(id) {
             const log = logsGlobal.find(l => l.id === id);
             const datos = JSON.parse(log.datos);
