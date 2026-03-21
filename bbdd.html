@@ -7,14 +7,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #ecf0f1; padding: 20px; color: #333; margin: 0; }
-        /* Añadido overflow-x para que en el iPhone se pueda deslizar la tabla hacia los lados */
         .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow-x: auto; }
         h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
         .cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         
         /* Filtros */
-        .filtros { display: flex; gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .filtros input, .filtros select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; min-width: 150px; }
+        .filtros-container { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dce4ec; }
+        .filtros { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filtros input, .filtros select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; min-width: 140px; font-family: inherit; }
+        .filtros-grupo-fecha { display: flex; gap: 10px; align-items: center; flex-grow: 1; min-width: 300px; background: #fff; padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .filtros-grupo-fecha input { border: none; padding: 5px; min-width: 110px; }
         
         /* Tabla */
         table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
@@ -22,10 +24,13 @@
         td { padding: 10px; border-bottom: 1px solid #ddd; }
         tr:hover { background-color: #f1f2f6; }
         
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; color: white; display: inline-block; text-align: center; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; color: white; display: inline-block; text-align: center; transition: 0.2s; }
+        .btn:hover { filter: brightness(0.9); }
         .btn-excel { background-color: #27ae60; }
         .btn-volver { background-color: #95a5a6; }
         .btn-peligro { background-color: #e74c3c; padding: 5px 10px; }
+        .btn-limpiar { background-color: #e67e22; padding: 10px 15px; } /* Naranja para el botón de limpiar */
+        
         .badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8em; }
     </style>
 </head>
@@ -44,15 +49,31 @@
             </div>
         </div>
 
-        <div class="filtros">
-            <input type="text" id="filtroOT" placeholder="🔍 Buscar por Código OT..." onkeyup="filtrarTabla()">
-            <input type="text" id="filtroMarca" placeholder="🔍 Buscar por Marca..." onkeyup="filtrarTabla()">
-            <select id="filtroEstado" onchange="filtrarTabla()">
-                <option value="TODOS">Todos los Estados</option>
-                <option value="PENDIENTE">Pendientes</option>
-                <option value="HECHO">Hechos</option>
-                <option value="ANULADO">Anulados</option>
-            </select>
+        <div class="filtros-container">
+            <div class="filtros">
+                <input type="text" id="filtroOT" placeholder="🔍 Código OT..." onkeyup="filtrarTabla()">
+                <input type="text" id="filtroMarca" placeholder="🔍 Marca/Desc..." onkeyup="filtrarTabla()">
+                
+                <select id="filtroEstado" onchange="filtrarTabla()">
+                    <option value="TODOS">Todos los Estados</option>
+                    <option value="PENDIENTE">Pendientes</option>
+                    <option value="HECHO">Hechos</option>
+                    <option value="ANULADO">Anulados</option>
+                </select>
+
+                <select id="filtroCliente" onchange="filtrarTabla()">
+                    <option value="TODOS">Todos los Clientes</option>
+                    </select>
+
+                <div class="filtros-grupo-fecha">
+                    <span style="font-size: 0.9em; color: #7f8c8d; font-weight: bold;">📅 Rango:</span>
+                    <input type="date" id="filtroFechaInicio" onchange="filtrarTabla()" title="Fecha Desde">
+                    <span style="color: #ccc;">-</span>
+                    <input type="date" id="filtroFechaFin" onchange="filtrarTabla()" title="Fecha Hasta">
+                </div>
+
+                <button class="btn btn-limpiar" onclick="borrarFiltros()" title="Restablecer todos los filtros">✖️ Limpiar Filtros</button>
+            </div>
         </div>
 
         <table id="tablaBBDD">
@@ -60,7 +81,8 @@
                 <tr>
                     <th>ID</th>
                     <th>Código OT</th>
-                    <th>Cliente</th> <th>Marca</th>
+                    <th>Cliente</th>
+                    <th>Marca</th>
                     <th>Fecha Encargo</th>
                     <th>Urgencia</th>
                     <th>Horas</th>
@@ -80,26 +102,32 @@
         // --- 1. SEGURIDAD Y SESIÓN ---
         const sesionStr = localStorage.getItem('sesionPlusUltra');
         if (!sesionStr) {
-            window.location.href = '/login'; // Expulsar si no hay sesión
+            window.location.href = '/login'; 
         }
         const sesion = JSON.parse(sesionStr);
 
         document.getElementById('infoUsuarioBBDD').innerHTML = `👤 <strong>${sesion.username.toUpperCase()}</strong> (${sesion.rol})`;
 
-        // Ocultar la cabecera de "Acciones" si no es admin
         if(sesion.rol !== 'admin') {
             document.getElementById('colAcciones').style.display = 'none';
         }
 
         // --- 2. LÓGICA DE LA BBDD ---
         let datosBBDD = [];
-        let clientesGlobal = []; // Para guardar los nombres de los clientes
+        let clientesGlobal = [];
 
         async function cargarDatos() {
             try {
                 // Descargamos clientes primero
                 const resClientes = await fetch('/api/clientes');
                 clientesGlobal = await resClientes.json();
+
+                // Poblar el selector de clientes en los filtros
+                const selectCliente = document.getElementById('filtroCliente');
+                const clientesAprobados = clientesGlobal.filter(c => c.estado === 'APROBADO');
+                clientesAprobados.forEach(c => {
+                    selectCliente.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+                });
 
                 // Descargamos OTs
                 const resOT = await fetch('/api/ot');
@@ -117,7 +145,7 @@
             tbody.innerHTML = '';
             
             if(datos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">No hay OTs que coincidan con la búsqueda.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color: #7f8c8d; padding: 30px;">No hay resultados con los filtros seleccionados.</td></tr>';
                 return;
             }
             
@@ -125,19 +153,13 @@
                 let colorEstado = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'ANULADO' ? '#e74c3c' : '#f1c40f');
                 let colorTexto = ot.estado === 'PENDIENTE' ? '#333' : 'white';
 
-                // Solo pintamos el botón y la celda (<td>) si es administrador
                 let celdaAcciones = sesion.rol === 'admin' 
                     ? `<td><button class="btn btn-peligro" title="Borrar de la BBDD" onclick="eliminarFila(${ot.id})">🗑️</button></td>` 
                     : '<td style="display:none;"></td>';
 
-                // Buscar el nombre del cliente
                 let cliente = clientesGlobal.find(c => c.id === ot.cliente_id);
                 let nombreCliente = cliente ? cliente.nombre : 'Consumidor Final';
-
-                // Mostrar los nombres de los técnicos o el número
                 let tecnicos = ot.tecnicos_nombres ? ot.tecnicos_nombres : ot.num_tecnicos;
-
-                // Formatear la fecha para quitar la "T"
                 let fechaLimpia = ot.fecha_encargo ? ot.fecha_encargo.replace('T', ' ') : '';
 
                 tbody.innerHTML += `
@@ -162,10 +184,7 @@
             if(confirm("⚠ CUIDADO: Estás a punto de borrar esta OT para siempre. ¿Continuar?")) {
                 fetch(`/api/ot/${id}`, { 
                     method: 'DELETE',
-                    headers: { 
-                        'x-rol': sesion.rol,
-                        'x-user': sesion.username // Añadido para que el servidor sepa quién borra
-                    } 
+                    headers: { 'x-rol': sesion.rol, 'x-user': sesion.username } 
                 }).then(res => res.json()).then(data => {
                     if(data.error) alert("❌ " + data.error);
                     else cargarDatos();
@@ -173,33 +192,61 @@
             }
         }
 
+        // --- 3. MOTOR DE FILTROS AVANZADO ---
         function filtrarTabla() {
             const textoOT = document.getElementById('filtroOT').value.toLowerCase();
             const textoMarca = document.getElementById('filtroMarca').value.toLowerCase();
             const comboEstado = document.getElementById('filtroEstado').value;
+            const comboCliente = document.getElementById('filtroCliente').value;
+            const fechaIni = document.getElementById('filtroFechaInicio').value;
+            const fechaFin = document.getElementById('filtroFechaFin').value;
 
             const filtrados = datosBBDD.filter(ot => {
+                // Filtros de texto y selectores
                 const coincideOT = ot.codigo_ot.toLowerCase().includes(textoOT);
                 const coincideMarca = ot.marca.toLowerCase().includes(textoMarca);
                 const coincideEstado = comboEstado === 'TODOS' || ot.estado === comboEstado;
-                return coincideOT && coincideMarca && coincideEstado;
+                const coincideCliente = comboCliente === 'TODOS' || String(ot.cliente_id) === comboCliente;
+
+                // Filtro de Fechas
+                let coincideFecha = true;
+                if (ot.fecha_encargo) {
+                    const fechaOT = ot.fecha_encargo.split('T')[0]; // Extrae solo la parte YYYY-MM-DD
+                    if (fechaIni && fechaOT < fechaIni) coincideFecha = false;
+                    if (fechaFin && fechaOT > fechaFin) coincideFecha = false;
+                } else if (fechaIni || fechaFin) {
+                    // Si la OT no tiene fecha pero estamos filtrando por fecha, la excluimos
+                    coincideFecha = false;
+                }
+
+                return coincideOT && coincideMarca && coincideEstado && coincideCliente && coincideFecha;
             });
 
             dibujarTabla(filtrados);
+        }
+
+        function borrarFiltros() {
+            // Vaciar todos los inputs y selects
+            document.getElementById('filtroOT').value = '';
+            document.getElementById('filtroMarca').value = '';
+            document.getElementById('filtroEstado').value = 'TODOS';
+            document.getElementById('filtroCliente').value = 'TODOS';
+            document.getElementById('filtroFechaInicio').value = '';
+            document.getElementById('filtroFechaFin').value = '';
+            
+            // Forzar a que se redibuje la tabla entera
+            filtrarTabla();
         }
 
         function exportarExcel() {
             let tabla = document.getElementById("tablaBBDD");
             let tablaClon = tabla.cloneNode(true);
             
-            // Borramos la última columna (Acciones) para que no salga en el Excel
             if(sesion.rol === 'admin') {
                 for(let i=0; i<tablaClon.rows.length; i++) { tablaClon.rows[i].deleteCell(-1); }
             }
 
             let wb = XLSX.utils.table_to_book(tablaClon, {sheet:"Base de Datos OTs"});
-            
-            // Le ponemos la fecha de hoy al Excel
             const fechaHoy = new Date().toISOString().split('T')[0];
             XLSX.writeFile(wb, `Historial_ServiPlusUltra_${fechaHoy}.xlsx`);
         }
