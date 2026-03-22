@@ -64,13 +64,11 @@
         .tecnico-badge { background: #3498db; color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.9em; display: flex; align-items: center; gap: 8px; }
         .tecnico-badge span { cursor: pointer; font-weight: bold; }
 
-        /* GALERÍA DE TICKETS */
         .ticket-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
         .ticket-card { border: 1px solid #ccc; border-radius: 8px; overflow: hidden; background: #f8f9fa; text-align: center; }
         .ticket-img { width: 100%; height: 150px; object-fit: cover; cursor: pointer; }
         .ticket-info { padding: 10px; font-size: 0.9em; }
 
-        /* FACTURAS */
         .modal-content-folio { margin: 40px auto; padding: 60px; max-width: 800px; min-height: 800px; color: #333; }
         .factura-header { display: flex; justify-content: space-between; border-bottom: 2px solid #2c3e50; padding-bottom: 25px; margin-bottom: 35px; }
         .datos-empresa h3, .datos-factura h2 { margin: 10px 0 5px 0; color: #2c3e50; }
@@ -176,6 +174,8 @@
         </div>
         
         <div class="menu-items">
+            <button class="btn-side" style="background: #9b59b6; margin-bottom: 20px;" onclick="probarEnvioCorreo()">📧 Probar Envío de Correo</button>
+
             <div id="menuClientesArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
                 <h4 style="color: #95a5a6; margin-top: 0;">👥 CRM CLIENTES</h4>
                 <button class="btn-side" style="background: #3498db;" onclick="abrirModal('modalClientes'); renderizarBurbujasClientes();">🗂️ Ver Clientes</button>
@@ -205,7 +205,7 @@
                 <button class="btn-save" style="margin-top: 0; padding: 10px;" onclick="subirTicketOT()">Subir Ticket</button>
             </div>
 
-            <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Galería de Tickets de esta OT</h3>
+            <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Galería de Tickets</h3>
             <div id="t_galeria" class="ticket-gallery"></div>
         </div>
     </div>
@@ -228,7 +228,7 @@
             <table class="tabla-holded"><thead><tr><th style="width: 50%;">Concepto</th><th>Cant.</th><th>Precio/U (€)</th><th style="text-align: right;">Total</th><th style="width: 5%;"></th></tr></thead><tbody id="tbodyLineas"></tbody></table>
             <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea</button>
             <div style="display:flex; justify-content:flex-end; margin-top:30px;"><div class="totales-caja"><p>Base: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total: <span id="factTotal">0.00</span> €</h3></div></div>
-            <button class="btn-save no-print" id="btnEmitir" style="margin-top: 30px; font-size: 1.2em;" onclick="guardarFacturaDefinitiva()">Emitir Factura</button>
+            <button class="btn-save no-print" id="btnEmitir" style="margin-top: 30px; font-size: 1.2em;" onclick="guardarFacturaDefinitiva()">Emitir Factura (Imprimir PDF)</button>
         </div>
     </div>
 
@@ -268,81 +268,54 @@
             cargarUsuariosParaOT();
         }
 
-        // --- COMPRESOR INTELIGENTE DE IMÁGENES ---
         function comprimirImagen(file, callback) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
+            const reader = new FileReader(); reader.readAsDataURL(file);
             reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
+                const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; // Reduce 4000px de iPhone a 800px legibles
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    // Exporta como JPEG muy comprimido pero legible
-                    const base64 = canvas.toDataURL('image/jpeg', 0.6); 
-                    callback(base64);
+                    const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
                 };
             };
         }
 
-        // --- TICKETS Y FACTURAS (PASO 1) ---
+        // --- NUEVA FUNCIÓN: PROBAR CORREO ---
+        function probarEnvioCorreo() {
+            const email = prompt("Introduce tu correo electrónico personal para recibir la prueba:");
+            if (!email) return;
+            alert("⏳ Enviando... esto puede tardar unos segundos.");
+            fetch('/api/test-email', {
+                method: 'POST', headers: headersSeguridad,
+                body: JSON.stringify({ emailDestino: email })
+            }).then(r => r.json()).then(data => {
+                if(data.error) alert("❌ " + data.error);
+                else alert("✅ " + data.mensaje);
+            }).catch(e => alert("❌ Error de conexión al enviar el correo."));
+        }
+
         function abrirTicketsOT(id, codigo) {
             otActualId = id; document.getElementById('t_codigo_ot').innerText = codigo;
             document.getElementById('t_file').value = ''; document.getElementById('t_importe').value = ''; document.getElementById('t_desc').value = '';
-            
             fetch(`/api/ot/${id}/adjuntos`).then(res => res.json()).then(data => {
                 const galeria = document.getElementById('t_galeria'); galeria.innerHTML = '';
                 if(data.length === 0) galeria.innerHTML = '<p style="grid-column: 1/-1; color:#7f8c8d; text-align:center;">No hay tickets subidos aún.</p>';
-                data.forEach(t => {
-                    galeria.innerHTML += `
-                        <div class="ticket-card">
-                            <img src="${t.imagen}" class="ticket-img" onclick="window.open('${t.imagen}')" title="Clic para ampliar">
-                            <div class="ticket-info">
-                                <strong>${t.importe} €</strong><br>
-                                <small>${t.descripcion || 'Sin descripción'}</small><br>
-                                <small style="color:#aaa;">${t.fecha}</small>
-                            </div>
-                        </div>`;
-                });
+                data.forEach(t => { galeria.innerHTML += `<div class="ticket-card"><img src="${t.imagen}" class="ticket-img" onclick="window.open('${t.imagen}')" title="Clic para ampliar"><div class="ticket-info"><strong>${t.importe} €</strong><br><small>${t.descripcion || 'Sin descripción'}</small><br><small style="color:#aaa;">${t.fecha}</small></div></div>`; });
                 abrirModal('modalTickets');
             });
         }
-
         function subirTicketOT() {
-            const file = document.getElementById('t_file').files[0];
-            const importe = document.getElementById('t_importe').value;
-            const desc = document.getElementById('t_desc').value;
-
+            const file = document.getElementById('t_file').files[0]; const importe = document.getElementById('t_importe').value; const desc = document.getElementById('t_desc').value;
             if(!file) { alert("❌ Debes adjuntar una foto del ticket."); return; }
-
-            // Usamos el compresor antes de enviarlo
             comprimirImagen(file, (imagenB64) => {
-                fetch(`/api/ot/${otActualId}/adjuntos`, {
-                    method: 'POST', headers: headersSeguridad,
-                    body: JSON.stringify({ imagen: imagenB64, importe: importe, descripcion: desc })
-                }).then(res => res.json()).then(data => {
-                    if(data.error) alert("❌ " + data.error);
-                    else {
-                        alert("✅ " + data.mensaje);
-                        abrirTicketsOT(otActualId, document.getElementById('t_codigo_ot').innerText); // Recargar galería
-                        cargarOTs(); // Recargar OTs para ver el nuevo precio de materiales
-                    }
+                fetch(`/api/ot/${otActualId}/adjuntos`, { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ imagen: imagenB64, importe: importe, descripcion: desc }) }).then(res => res.json()).then(data => {
+                    if(data.error) alert("❌ " + data.error); else { alert("✅ " + data.mensaje); abrirTicketsOT(otActualId, document.getElementById('t_codigo_ot').innerText); cargarOTs(); }
                 });
             });
         }
 
-        function cargarUsuariosParaOT() {
-            fetch('/api/usuarios/nombres').then(res => res.json()).then(data => {
-                const s1 = document.getElementById('selTecnicosAdd'); const s2 = document.getElementById('e_selTecnicosAdd');
-                s1.innerHTML = '<option value="">-- Seleccionar --</option>'; s2.innerHTML = '<option value="">-- Seleccionar --</option>';
-                data.forEach(u => { const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`; s1.innerHTML += opt; s2.innerHTML += opt; });
-            });
-        }
+        function cargarUsuariosParaOT() { fetch('/api/usuarios/nombres').then(res => res.json()).then(data => { const s1 = document.getElementById('selTecnicosAdd'); const s2 = document.getElementById('e_selTecnicosAdd'); s1.innerHTML = '<option value="">-- Seleccionar --</option>'; s2.innerHTML = '<option value="">-- Seleccionar --</option>'; data.forEach(u => { const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`; s1.innerHTML += opt; s2.innerHTML += opt; }); }); }
         function agregarTecnicoOT() { const s = document.getElementById('selTecnicosAdd'); if(s.value && !tecnicosSeleccionados.includes(s.value)) { tecnicosSeleccionados.push(s.value); renderizarTecnicosOT(); } s.value = ""; }
         function quitarTecnicoOT(nombre) { tecnicosSeleccionados = tecnicosSeleccionados.filter(t => t !== nombre); renderizarTecnicosOT(); }
         function renderizarTecnicosOT() { const d = document.getElementById('listaTecnicosOT'); d.innerHTML = ''; tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarTecnicoOT('${t}')">&times;</span></div>`); }
@@ -365,85 +338,22 @@
                 const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Consumidor Final --</option>'; cAprobados.forEach(c => selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
             });
         }
-        function renderizarBurbujasClientes() {
-            const grid = document.getElementById('gridClientes'); grid.innerHTML = ''; const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO');
-            if(aprobados.length === 0) grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Aún no hay clientes.</p>';
-            aprobados.forEach(c => grid.innerHTML += `<div class="cliente-bubble" onclick="abrirDetalleCliente(${c.id})"><img src="${c.logo || imgClienteDef}" class="bubble-img"><div class="bubble-name">${c.nombre}</div></div>`);
-        }
-        document.getElementById('formCliente').addEventListener('submit', function(e) {
-            e.preventDefault(); const file = document.getElementById('c_logo_file').files[0];
-            const enviar = (logoB64) => { fetch('/api/clientes', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ nombre: document.getElementById('c_nombre').value, nif: document.getElementById('c_nif').value, direccion: document.getElementById('c_direccion').value, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, logo: logoB64 }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); document.getElementById('formCliente').reset(); cerrarModal('modalCrearCliente'); cargarClientes(); }); };
-            if(file) { comprimirImagen(file, enviar); } else { enviar(''); }
-        });
-        function abrirDetalleCliente(id) {
-            const c = clientesGlobal.find(x => x.id === id); document.getElementById('d_c_logo').src = c.logo || imgClienteDef; document.getElementById('d_c_nombre').innerText = c.nombre; document.getElementById('d_c_nif').innerText = c.nif; document.getElementById('d_c_direccion').innerText = c.direccion; document.getElementById('d_c_tel').innerText = c.telefono || '-'; document.getElementById('d_c_email').innerText = c.email || '-';
-            const ots = otsGlobal.filter(ot => ot.cliente_id === id); const divOts = document.getElementById('d_c_ots'); divOts.innerHTML = '';
-            if(ots.length === 0) divOts.innerHTML = '<p>No hay OTs para este cliente.</p>';
-            ots.forEach(ot => { let color = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'PENDIENTE' ? '#f39c12' : '#e74c3c'); divOts.innerHTML += `<div style="border-left: 4px solid ${color}; padding: 10px; background: #fff; margin-bottom: 8px;"><strong>${ot.codigo_ot}</strong> - ${ot.marca} <span style="float:right; color:${color};">${ot.estado}</span></div>`; });
-            cerrarModal('modalClientes'); abrirModal('modalDetalleCliente');
-        }
-        function abrirSolicitudesClientes() {
-            const tbody = document.getElementById('tbodySolicitudesClientes'); tbody.innerHTML = ''; const p = clientesGlobal.filter(c => c.estado === 'PENDIENTE');
-            if(p.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay solicitudes</td></tr>';
-            p.forEach(c => tbody.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td>${c.nif}</td><td>Director</td><td><button style="background:#27ae60; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'APROBADO')">✅</button> <button style="background:#e74c3c; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'RECHAZADO')">❌</button></td></tr>`);
-            abrirModal('modalSolicitudesClientes');
-        }
+        function renderizarBurbujasClientes() { const grid = document.getElementById('gridClientes'); grid.innerHTML = ''; const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO'); if(aprobados.length === 0) grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Aún no hay clientes.</p>'; aprobados.forEach(c => grid.innerHTML += `<div class="cliente-bubble" onclick="abrirDetalleCliente(${c.id})"><img src="${c.logo || imgClienteDef}" class="bubble-img"><div class="bubble-name">${c.nombre}</div></div>`); }
+        document.getElementById('formCliente').addEventListener('submit', function(e) { e.preventDefault(); const file = document.getElementById('c_logo_file').files[0]; const enviar = (logoB64) => { fetch('/api/clientes', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ nombre: document.getElementById('c_nombre').value, nif: document.getElementById('c_nif').value, direccion: document.getElementById('c_direccion').value, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, logo: logoB64 }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); document.getElementById('formCliente').reset(); cerrarModal('modalCrearCliente'); cargarClientes(); }); }; if(file) { comprimirImagen(file, enviar); } else { enviar(''); } });
+        function abrirDetalleCliente(id) { const c = clientesGlobal.find(x => x.id === id); document.getElementById('d_c_logo').src = c.logo || imgClienteDef; document.getElementById('d_c_nombre').innerText = c.nombre; document.getElementById('d_c_nif').innerText = c.nif; document.getElementById('d_c_direccion').innerText = c.direccion; document.getElementById('d_c_tel').innerText = c.telefono || '-'; document.getElementById('d_c_email').innerText = c.email || '-'; const ots = otsGlobal.filter(ot => ot.cliente_id === id); const divOts = document.getElementById('d_c_ots'); divOts.innerHTML = ''; if(ots.length === 0) divOts.innerHTML = '<p>No hay OTs para este cliente.</p>'; ots.forEach(ot => { let color = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'PENDIENTE' ? '#f39c12' : '#e74c3c'); divOts.innerHTML += `<div style="border-left: 4px solid ${color}; padding: 10px; background: #fff; margin-bottom: 8px;"><strong>${ot.codigo_ot}</strong> - ${ot.marca} <span style="float:right; color:${color};">${ot.estado}</span></div>`; }); cerrarModal('modalClientes'); abrirModal('modalDetalleCliente'); }
+        function abrirSolicitudesClientes() { const tbody = document.getElementById('tbodySolicitudesClientes'); tbody.innerHTML = ''; const p = clientesGlobal.filter(c => c.estado === 'PENDIENTE'); if(p.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay solicitudes</td></tr>'; p.forEach(c => tbody.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td>${c.nif}</td><td>Director</td><td><button style="background:#27ae60; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'APROBADO')">✅</button> <button style="background:#e74c3c; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'RECHAZADO')">❌</button></td></tr>`); abrirModal('modalSolicitudesClientes'); }
         function resolverCliente(id, estado) { fetch(`/api/clientes/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarClientes(); abrirSolicitudesClientes(); }); }
 
-        function cargarOTs() {
-            fetch('/api/ot').then(res => res.json()).then(ots => {
-                otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = '';
-                ots.forEach(ot => {
-                    let btnB = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`;
-                    let disable = sesion.rol === 'tecnico' ? 'disabled' : '';
-                    let btnF = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : '';
-                    let nC = ot.cliente_id ? (clientesGlobal.find(c => c.id === ot.cliente_id)?.nombre || '') : '';
-                    let sC = nC ? `<br><small style="color:#7f8c8d;">🏢 ${nC}</small>` : '';
-                    let sT = ot.tecnicos_nombres ? `<br><small style="color:#3498db; font-weight:bold;">👷 ${ot.tecnicos_nombres}</small>` : '';
-
-                    document.getElementById('contenedorOTs').innerHTML += `
-                        <div class="ot-card">
-                            <div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca} ${sC} ${sT}<br><strong style="color:#e67e22;">Materiales/Tickets: ${ot.materiales_precio} €</strong></div>
-                            <div class="actions">
-                                <select class="sel-estado ${ot.estado === 'HECHO' ? 'est-hecho' : (ot.estado === 'ANULADO' ? 'est-anulado' : 'est-pendiente')}" ${disable} onchange="cambiarEstado(${ot.id}, this)">
-                                    <option value="PENDIENTE" ${ot.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option><option value="HECHO" ${ot.estado === 'HECHO' ? 'selected' : ''}>HECHO</option><option value="ANULADO" ${ot.estado === 'ANULADO' ? 'selected' : ''}>ANULADO</option>
-                                </select>
-                                <button class="btn-ticket" onclick="abrirTicketsOT(${ot.id}, '${ot.codigo_ot}')">🧾 Tickets</button>
-                                ${btnF} ${btnB}
-                            </div>
-                        </div>`;
-                });
-            });
-        }
+        function cargarOTs() { fetch('/api/ot').then(res => res.json()).then(ots => { otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = ''; ots.forEach(ot => { let btnB = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`; let disable = sesion.rol === 'tecnico' ? 'disabled' : ''; let btnF = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : ''; let nC = ot.cliente_id ? (clientesGlobal.find(c => c.id === ot.cliente_id)?.nombre || '') : ''; let sC = nC ? `<br><small style="color:#7f8c8d;">🏢 ${nC}</small>` : ''; let sT = ot.tecnicos_nombres ? `<br><small style="color:#3498db; font-weight:bold;">👷 ${ot.tecnicos_nombres}</small>` : ''; document.getElementById('contenedorOTs').innerHTML += `<div class="ot-card"><div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca} ${sC} ${sT}<br><strong style="color:#e67e22;">Materiales/Tickets: ${ot.materiales_precio} €</strong></div><div class="actions"><select class="sel-estado ${ot.estado === 'HECHO' ? 'est-hecho' : (ot.estado === 'ANULADO' ? 'est-anulado' : 'est-pendiente')}" ${disable} onchange="cambiarEstado(${ot.id}, this)"><option value="PENDIENTE" ${ot.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option><option value="HECHO" ${ot.estado === 'HECHO' ? 'selected' : ''}>HECHO</option><option value="ANULADO" ${ot.estado === 'ANULADO' ? 'selected' : ''}>ANULADO</option></select><button class="btn-ticket" onclick="abrirTicketsOT(${ot.id}, '${ot.codigo_ot}')">🧾 Tickets</button>${btnF} ${btnB}</div></div>`; }); }); }
         function cambiarEstado(id, sel) { fetch(`/api/ot/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado: sel.value }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
         function eliminarOT(id) { if(confirm("¿Solicitar borrado?")) fetch(`/api/ot/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
 
-        document.getElementById('formOT').addEventListener('submit', function(e) {
-            e.preventDefault(); if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; }
-            const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value;
-            if (!validarFormulario(codigo, fechaEn, fechaCo)) return;
-            const datos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('materiales_precio').value), cliente_id: document.getElementById('ot_cliente_id').value || null };
-            fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); cargarOTs(); }});
-        });
+        document.getElementById('formOT').addEventListener('submit', function(e) { e.preventDefault(); if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; } const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value; if (!validarFormulario(codigo, fechaEn, fechaCo)) return; const datos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('materiales_precio').value), cliente_id: document.getElementById('ot_cliente_id').value || null }; fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); cargarOTs(); }}); });
 
         // FACTURAS
-        function abrirGeneradorFactura(id) {
-            const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot;
-            document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES');
-            document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura();
-            lineasFactura = [{ concepto: "Desplazamiento", cantidad: 1, precio: 40.00 }, { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }];
-            renderizarTablaFactura(); abrirModal('modalFactura');
-        }
-        function actualizarInfoClienteFactura() {
-            const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto');
-            if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; }
-            const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`;
-        }
-        function renderizarTablaFactura() {
-            const tbody = document.getElementById('tbodyLineas'); tbody.innerHTML = ''; let baseImponible = 0;
-            lineasFactura.forEach((l, idx) => { const t = l.cantidad * l.precio; baseImponible += t; tbody.innerHTML += `<tr><td><input type="text" value="${l.concepto}" onchange="actualizarLinea(${idx}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${l.cantidad}" onchange="actualizarLinea(${idx}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${l.precio}" onchange="actualizarLinea(${idx}, 'precio', this.value)"></td><td style="text-align:right;">${t.toFixed(2)} €</td><td><button class="btn-peligro" onclick="borrarLineaFactura(${idx})">🗑️</button></td></tr>`; });
-            const iva = baseImponible * 0.21; document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2);
-        }
+        function abrirGeneradorFactura(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot; document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura(); lineasFactura = [{ concepto: "Desplazamiento", cantidad: 1, precio: 40.00 }, { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }]; renderizarTablaFactura(); abrirModal('modalFactura'); }
+        function actualizarInfoClienteFactura() { const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto'); if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; } const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`; }
+        function renderizarTablaFactura() { const tbody = document.getElementById('tbodyLineas'); tbody.innerHTML = ''; let baseImponible = 0; lineasFactura.forEach((l, idx) => { const t = l.cantidad * l.precio; baseImponible += t; tbody.innerHTML += `<tr><td><input type="text" value="${l.concepto}" onchange="actualizarLinea(${idx}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${l.cantidad}" onchange="actualizarLinea(${idx}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${l.precio}" onchange="actualizarLinea(${idx}, 'precio', this.value)"></td><td style="text-align:right;">${t.toFixed(2)} €</td><td><button class="btn-peligro" onclick="borrarLineaFactura(${idx})">🗑️</button></td></tr>`; }); const iva = baseImponible * 0.21; document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2); }
         function actualizarLinea(i, c, v) { lineasFactura[i][c] = c === 'concepto' ? v : (parseFloat(v) || 0); renderizarTablaFactura(); }
         function agregarLineaBlanco() { lineasFactura.push({ concepto: "", cantidad: 1, precio: 0.00 }); renderizarTablaFactura(); }
         function borrarLineaFactura(i) { lineasFactura.splice(i, 1); renderizarTablaFactura(); }
