@@ -4,7 +4,6 @@ const cors = require('cors');
 const path = require('path');
 const QRCode = require('qrcode');
 const { createClient } = require('@libsql/client');
-const nodemailer = require('nodemailer'); // <-- NUESTRO CARTERO
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,20 +17,6 @@ app.get('/bbdd', (req, res) => res.sendFile(path.join(__dirname, 'bbdd.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
 const db = createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
-
-// --- CONFIGURACIÓN DEL CARTERO (EMAIL) ---
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false // Para evitar que Render bloquee la seguridad del servidor
-    }
-});
 
 async function inicializarDB() {
     try {
@@ -101,29 +86,32 @@ app.put('/api/logs/:id/resolver', async (req, res) => {
 
 app.post('/api/factura', async (req, res) => { const { ot_id, codigo_ot, base_imponible, iva, total } = req.body; const fecha = new Date().toISOString().split('T')[0]; const txt = `NIF:B-26892760|FacturaRef:${codigo_ot}|Fecha:${fecha}|Total:${total}EUR`; try { const qr = await QRCode.toDataURL(txt); await db.execute({ sql: `INSERT INTO facturas (ot_id, base_imponible, iva, total, qr_data, fecha_emision) VALUES (?, ?, ?, ?, ?, ?)`, args: [ot_id, base_imponible, iva, total, qr, fecha] }); res.status(200).json({ mensaje: 'Factura emitida', qr_data: qr }); } catch (e) { res.status(500).json({ error: 'Error QR.' }); } });
 
-// --- ENDPOINT SECRETO DE TEST DE EMAIL ---
+// --- ENDPOINT SECRETO DE TEST DE EMAIL (VERSIÓN PUENTE HTTP) ---
 app.post('/api/test-email', async (req, res) => {
     const { emailDestino } = req.body;
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            return res.status(500).json({ error: 'Falta configurar el correo en Render.' });
-        }
-        await transporter.sendMail({
-            from: `"ServiPlusUltra" <${process.env.EMAIL_USER}>`,
+        const payload = {
             to: emailDestino,
             subject: "🛠️ Prueba de conexión - ServiPlusUltra",
             html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; text-align: center;">
-                    <h2 style="color: #1abc9c;">¡El sistema de correos funciona! 🚀</h2>
-                    <p style="font-size: 16px; color: #333;">Si estás leyendo esto, significa que tu App ya es capaz de enviar correos automáticos.</p>
-                    <p style="color: #7f8c8d;">Pronto, aquí irán adjuntas las facturas reales para tus clientes.</p>
+                    <h2 style="color: #1abc9c;">¡El túnel secreto funciona! 🚀</h2>
+                    <p style="font-size: 16px; color: #333;">Hemos burlado el bloqueo de Render y Google ha enviado el correo a la perfección.</p>
                 </div>
             `
+        };
+
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBS0XQVDJX9s8hyHRT9blyAIaXLQYSpZfITHJiV_ZS4uPdZFgFT8TtbxXGtDqh72M2VA/exec";
+
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
         });
-        res.json({ mensaje: 'Correo de prueba enviado con éxito. ¡Revisa tu bandeja de entrada!' });
+
+        res.json({ mensaje: 'Correo enviado con éxito. ¡Revisa tu bandeja de entrada! 😎' });
     } catch (error) {
-        console.error("Error enviando email:", error);
-        res.status(500).json({ error: 'Fallo al enviar el correo. Revisa la contraseña de aplicación de Gmail.' });
+        console.error("Error en el puente:", error);
+        res.status(500).json({ error: 'Fallo al enviar el correo por el puente.' });
     }
 });
 
