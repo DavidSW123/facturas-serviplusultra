@@ -21,10 +21,15 @@ const db = createClient({ url: process.env.TURSO_DATABASE_URL, authToken: proces
 
 // --- CONFIGURACIÓN DEL CARTERO (EMAIL) ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
-        user: process.env.EMAIL_USER, // Lo pondremos en Render luego
-        pass: process.env.EMAIL_PASS  // Lo pondremos en Render luego
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false // Para evitar que Render bloquee la seguridad del servidor
     }
 });
 
