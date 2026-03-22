@@ -25,10 +25,12 @@
         
         .ot-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
         .ot-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .ot-info { flex-grow: 1; } .actions { display: flex; align-items: center; gap: 10px; }
+        .ot-info { flex-grow: 1; } .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
         .sel-estado { padding: 8px; border-radius: 5px; font-weight: bold; color: white; border: none; cursor: pointer; }
         .est-hecho { background-color: #27ae60; } .est-pendiente { background-color: #f1c40f; color: #333; } .est-anulado { background-color: #e74c3c; }
+        
         .btn-factura { background-color: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-ticket { background-color: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-peligro { background-color: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-secundario { background-color: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; }
         .btn-editar { background-color: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -54,62 +56,57 @@
         .modal-content { background-color: #fff; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: #aaa; transition: 0.3s; z-index: 10; }
         
-        /* === BUBBLES PARA TÉCNICOS Y CLIENTES === */
         .clientes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 20px; margin-top: 20px; }
         .cliente-bubble { text-align: center; cursor: pointer; transition: 0.3s; padding: 10px; border-radius: 10px; }
         .cliente-bubble:hover { background: #f0f4f8; transform: scale(1.05); }
-        .bubble-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c; margin-bottom: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: #fff; }
+        .bubble-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c; margin-bottom: 8px; }
         .bubble-name { font-size: 0.9em; font-weight: bold; color: #2c3e50; word-wrap: break-word; }
-        .cliente-detalle-box { background: #f8f9fa; border-left: 4px solid #1abc9c; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        
-        .tecnico-badge { background: #3498db; color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.9em; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .tecnico-badge span { cursor: pointer; font-weight: bold; color: #ecf0f1; font-size: 1.2em; line-height: 1; }
-        .tecnico-badge span:hover { color: white; transform: scale(1.2); }
+        .tecnico-badge { background: #3498db; color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.9em; display: flex; align-items: center; gap: 8px; }
+        .tecnico-badge span { cursor: pointer; font-weight: bold; }
 
-        /* === FACTURAS === */
+        /* GALERÍA DE TICKETS */
+        .ticket-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+        .ticket-card { border: 1px solid #ccc; border-radius: 8px; overflow: hidden; background: #f8f9fa; text-align: center; }
+        .ticket-img { width: 100%; height: 150px; object-fit: cover; cursor: pointer; }
+        .ticket-info { padding: 10px; font-size: 0.9em; }
+
+        /* FACTURAS */
         .modal-content-folio { margin: 40px auto; padding: 60px; max-width: 800px; min-height: 800px; color: #333; }
         .factura-header { display: flex; justify-content: space-between; border-bottom: 2px solid #2c3e50; padding-bottom: 25px; margin-bottom: 35px; }
         .datos-empresa h3, .datos-factura h2 { margin: 10px 0 5px 0; color: #2c3e50; }
         .datos-empresa p, .datos-factura p { margin: 3px 0; font-size: 0.9em; }
         .datos-factura { text-align: right; }
-        .datos-factura h2 { font-size: 2.2em; letter-spacing: 2px; color: #1abc9c; }
-        .caja-cliente-fact { background: #f0f4f8; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; min-width: 250px; border: 1px solid #dce4ec; }
+        .datos-factura h2 { font-size: 2.2em; color: #1abc9c; }
+        .caja-cliente-fact { background: #f0f4f8; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #dce4ec; }
         .tabla-holded { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .tabla-holded th { border-bottom: 2px solid #2c3e50; padding: 12px 10px; text-align: left; background-color: #f8f9fa; }
         .tabla-holded td { border-bottom: 1px solid #eee; padding: 10px; }
         .tabla-holded input { padding: 8px; width: 100%; }
-        .factura-footer { display: flex; justify-content: space-between; margin-top: 50px; align-items: flex-end; }
-        .zona-qr { width: 130px; height: 130px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #aaa; text-align: center; border-radius: 8px; }
-        .totales-caja { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: right; border: 1px solid #ddd; min-width: 280px; }
-        .totales-caja h3 { margin: 15px 0 0 0; color: #2c3e50; font-size: 1.8em; border-top: 2px solid #ccc; padding-top: 15px; }
+        .totales-caja { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: right; border: 1px solid #ddd; }
         .tabla-logs { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         .tabla-logs th { background: #2c3e50; color: white; padding: 10px; text-align: left; }
         .tabla-logs td { padding: 10px; border-bottom: 1px solid #ddd; }
-        .badge-log { padding: 5px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.8em; }
-        .bg-pend { background-color: #f39c12; } .bg-ok { background-color: #27ae60; } .bg-ko { background-color: #e74c3c; }
+        .badge-log { padding: 5px 8px; border-radius: 4px; color: white; font-weight: bold; }
 
         @media screen and (max-width: 768px) {
             body { padding: 10px; } .container { padding: 15px; } .grid-2 { grid-template-columns: 1fr; gap: 10px; }
-            .top-bar { flex-direction: column-reverse; gap: 15px; text-align: center; } .top-bar > div:last-child { flex-direction: column; }
+            .top-bar { flex-direction: column-reverse; gap: 15px; text-align: center; } 
             .ot-card { flex-direction: column; align-items: flex-start; gap: 15px; }
             .actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-            .sel-estado, .btn-factura, .btn-peligro { width: 100%; text-align: center; margin: 0; }
-            .tabla-logs-container, .tabla-holded { display: block; overflow-x: auto; white-space: nowrap; }
+            .sel-estado, .btn-factura, .btn-ticket, .btn-peligro { width: 100%; text-align: center; margin: 0; }
             .modal-content-folio { padding: 20px; width: 95%; margin: 10% auto; }
             .factura-header { flex-direction: column; gap: 20px; align-items: center; text-align: center; }
-            .datos-empresa h3, .datos-factura h2, .datos-factura { text-align: center; }
-            .caja-cliente-fact { text-align: center; }
-            .factura-footer { flex-direction: column; gap: 30px; align-items: center; } .totales-caja { width: 100%; min-width: auto; }
+            .datos-factura { text-align: center; } .ticket-gallery { grid-template-columns: 1fr; }
         }
 
         @media print {
             .no-print { display: none !important; } .only-print { display: block !important; }
             html, body { background: white; padding: 0; margin: 0; height: auto !important; overflow: visible !important; }
-            .container, .overlay-menu, .side-menu, #modalLogs, #modalEditarLog, #modalPassword, #modalTecnico, #modalClientes, #modalCrearCliente, #modalDetalleCliente, #modalSolicitudesClientes { display: none !important; }
-            #modalFactura { display: block !important; position: relative !important; left: auto; top: auto; width: 100% !important; height: auto !important; background: white !important; overflow: visible !important; }
-            .modal-content-folio { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; border: none !important; min-height: auto !important; }
+            .container, .overlay-menu, .side-menu, .modal { display: none !important; }
+            #modalFactura { display: block !important; position: relative !important; width: 100% !important; background: white !important; }
+            .modal-content-folio { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; border: none !important; }
             .close-modal, .btn-secundario, .btn-save, .btn-peligro, th:last-child, td:last-child { display: none !important; }
-            .tabla-holded input { border: none !important; background: transparent !important; padding: 0 !important; font-family: inherit; font-size: inherit; color: black !important; }
+            .tabla-holded input { border: none !important; background: transparent !important; padding: 0 !important; font-family: inherit; color: black !important; }
             ::-webkit-inner-spin-button, ::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         }
         .only-print { display: none; }
@@ -117,7 +114,7 @@
 </head>
 <body>
 
-    <div class="container">
+    <div class="container no-print">
         <div class="top-bar">
             <div><a href="/bbdd" class="btn-secundario">🗄️ Abrir Base de Datos</a></div>
             <div style="display: flex; align-items: center; gap: 15px;">
@@ -142,13 +139,9 @@
             
             <div class="grid-2">
                 <div class="form-group"><label>Horas facturables (por persona)</label><input type="number" step="0.1" id="horas" required></div>
-                
                 <div class="form-group">
                     <label>Técnicos que realizaron el trabajo</label>
-                    <div style="display:flex; gap:10px;">
-                        <select id="selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select>
-                        <button type="button" class="btn-secundario" style="margin:0; padding: 10px;" onclick="agregarTecnicoOT()">Añadir</button>
-                    </div>
+                    <div style="display:flex; gap:10px;"><select id="selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding: 10px;" onclick="agregarTecnicoOT()">Añadir</button></div>
                     <div id="listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div>
                 </div>
             </div>
@@ -156,7 +149,10 @@
             <div class="form-group"><label>Marca / Descripción</label><input type="text" id="marca" required></div>
             <div class="grid-2">
                 <div class="form-group"><label>Urgencia</label><select id="tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div>
-                <div class="form-group"><label>Materiales (€)</label><input type="number" step="0.01" id="materiales_precio" required></div>
+                <div class="form-group">
+                    <label>Materiales (€) <small>(Súmale los tickets luego)</small></label>
+                    <input type="number" step="0.01" id="materiales_precio" required>
+                </div>
             </div>
             <button type="submit" class="btn-save" id="btnGuardarMain">Guardar Orden de Trabajo</button>
         </form>
@@ -193,68 +189,53 @@
         <button class="btn-side-red" onclick="cerrarSesion()">🚪 CERRAR SESIÓN</button>
     </div>
 
+    <div id="modalTickets" class="modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <span class="close-modal" onclick="cerrarModal('modalTickets')">&times;</span>
+            <h2 style="margin-top:0;">🧾 Tickets y Facturas</h2>
+            <p style="color:#7f8c8d; font-size: 0.9em;">OT: <strong id="t_codigo_ot" style="color:#2c3e50;"></strong></p>
+            
+            <div style="background: #e8f8f5; border: 1px solid #1abc9c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; color: #16a085;">Subir nuevo ticket</h4>
+                <div class="grid-2">
+                    <div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div>
+                    <div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div>
+                </div>
+                <div class="form-group"><label>Descripción (Opcional)</label><input type="text" id="t_desc" placeholder="Ej: Recambio Leroy Merlin..."></div>
+                <button class="btn-save" style="margin-top: 0; padding: 10px;" onclick="subirTicketOT()">Subir Ticket</button>
+            </div>
+
+            <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Galería de Tickets de esta OT</h3>
+            <div id="t_galeria" class="ticket-gallery"></div>
+        </div>
+    </div>
+
     <div id="modalClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalClientes')">&times;</span><h2>👥 Cartera de Clientes</h2><div id="gridClientes" class="clientes-grid"></div></div></div>
     <div id="modalCrearCliente" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalCrearCliente')">&times;</span><h2>🏢 Registrar Nuevo Cliente</h2><form id="formCliente"><div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="c_nombre" required></div><div class="form-group"><label>NIF / CIF</label><input type="text" id="c_nif" required></div><div class="form-group"><label>Dirección Fiscal</label><input type="text" id="c_direccion" required></div><div class="grid-2"><div class="form-group"><label>Teléfono</label><input type="text" id="c_telefono"></div><div class="form-group"><label>Email</label><input type="email" id="c_email"></div></div><div class="form-group"><label>Logotipo (Opcional)</label><input type="file" id="c_logo_file" accept="image/*"></div><button type="submit" class="btn-save" id="btnGuardarCliente">Guardar Cliente</button></form></div></div>
     <div id="modalDetalleCliente" class="modal"><div class="modal-content" style="max-width: 700px;"><span class="close-modal" onclick="cerrarModal('modalDetalleCliente')">&times;</span><div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px;"><img id="d_c_logo" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c;"><h2 id="d_c_nombre" style="margin: 10px 0 0 0;"></h2></div><div class="cliente-detalle-box"><p><strong>NIF/CIF:</strong> <span id="d_c_nif"></span></p><p><strong>Dirección:</strong> <span id="d_c_direccion"></span></p><p><strong>Contacto:</strong> <span id="d_c_tel"></span> | <span id="d_c_email"></span></p></div><h3>🛠️ Historial de OTs</h3><div id="d_c_ots" style="max-height: 300px; overflow-y: auto;"></div></div></div>
-    <div id="modalSolicitudesClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalSolicitudesClientes')">&times;</span><h2>🔔 Solicitudes de Clientes</h2><div class="tabla-logs-container"><table class="tabla-logs"><thead><tr><th>Cliente</th><th>NIF</th><th>Añadido por</th><th>Acción</th></tr></thead><tbody id="tbodySolicitudesClientes"></tbody></table></div></div></div>
+    <div id="modalSolicitudesClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalSolicitudesClientes')">&times;</span><h2>🔔 Solicitudes de Clientes</h2><table class="tabla-logs"><thead><tr><th>Cliente</th><th>NIF</th><th>Añadido por</th><th>Acción</th></tr></thead><tbody id="tbodySolicitudesClientes"></tbody></table></div></div>
 
     <div id="modalFactura" class="modal">
         <div class="modal-content modal-content-folio">
             <span class="close-modal" onclick="cerrarModal('modalFactura')">&times;</span>
             <div class="factura-header">
-                <div class="datos-empresa">
-                    <img src="/logo.png" alt="Logo Empresa" style="max-width: 240px; max-height: 120px; margin-bottom: 10px;">
-                    <h3>ServiPlusUltra Solutions S.L.</h3>
-                    <p><strong>CIF:</strong> B-26892760</p><p>Carrer d'Aribau 168, 1-1</p><p>08036 Barcelona, España</p><p>serviplusultrasolutionssl@gmail.com | 657 295 108</p>
-                </div>
+                <div class="datos-empresa"><img src="/logo.png" style="max-width: 240px; margin-bottom: 10px;"><h3>ServiPlusUltra Solutions S.L.</h3><p>B-26892760</p><p>Carrer d'Aribau 168, 1-1, 08036 BCN</p></div>
                 <div class="datos-factura">
-                    <h2>FACTURA</h2>
-                    <p><strong>Ref. OT:</strong> <span id="factOtCode" style="color:#2c3e50; font-weight: bold;"></span></p>
-                    <p><strong>Fecha Emisión:</strong> <span id="factFechaHoy"></span></p>
-                    <div class="caja-cliente-fact">
-                        <strong style="display:block; margin-bottom: 8px; color:#2c3e50;">Facturar a:</strong>
-                        <select id="selClienteFactura" class="no-print" onchange="actualizarInfoClienteFactura()" style="padding: 8px; border:1px solid #bdc3c7; border-radius:4px; font-weight:bold; color:#34495e;"><option value="">-- Consumidor Final (Sin Datos) --</option></select>
-                        <div id="printClienteNombre" class="only-print" style="font-size: 1.2em; font-weight: bold; color: #000; margin-bottom: 5px;"></div>
-                        <div id="infoClienteFacturaTexto" style="font-size: 0.9em; color: #555; line-height: 1.4; margin-top: 5px;"></div>
-                    </div>
+                    <h2>FACTURA</h2><p><strong>Ref:</strong> <span id="factOtCode"></span></p><p><strong>Fecha:</strong> <span id="factFechaHoy"></span></p>
+                    <div class="caja-cliente-fact"><strong>Facturar a:</strong><select id="selClienteFactura" class="no-print" onchange="actualizarInfoClienteFactura()" style="width:100%; padding:8px; margin-top:5px;"></select><div id="printClienteNombre" class="only-print" style="font-weight:bold; font-size:1.1em;"></div><div id="infoClienteFacturaTexto" style="font-size:0.9em; margin-top:5px;"></div></div>
                 </div>
             </div>
-            <table class="tabla-holded"><thead><tr><th style="width: 50%;">Concepto</th><th style="width: 15%;">Cant.</th><th style="width: 20%;">Precio Ud. (€)</th><th style="width: 10%; text-align: right;">Total</th><th style="width: 5%;"></th></tr></thead><tbody id="tbodyLineas"></tbody></table>
-            <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea extra</button>
-            <div class="factura-footer">
-                <div class="zona-qr" id="zonaQR"><p>El código QR<br>legal<br>aparecerá aquí<br>al emitir</p></div>
-                <div class="totales-caja"><p>Base Imponible: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total a Cobrar: <span id="factTotal">0.00</span> €</h3></div>
-            </div>
-            <button class="btn-save" id="btnEmitir" style="margin-top: 50px; font-size: 1.2em; padding: 20px;" onclick="guardarFacturaDefinitiva()">Emitir Factura Oficial y Generar QR</button>
+            <table class="tabla-holded"><thead><tr><th style="width: 50%;">Concepto</th><th>Cant.</th><th>Precio/U (€)</th><th style="text-align: right;">Total</th><th style="width: 5%;"></th></tr></thead><tbody id="tbodyLineas"></tbody></table>
+            <button class="btn-secundario" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea</button>
+            <div style="display:flex; justify-content:flex-end; margin-top:30px;"><div class="totales-caja"><p>Base: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total: <span id="factTotal">0.00</span> €</h3></div></div>
+            <button class="btn-save no-print" id="btnEmitir" style="margin-top: 30px; font-size: 1.2em;" onclick="guardarFacturaDefinitiva()">Emitir Factura</button>
         </div>
     </div>
 
-    <div id="modalEditarLog" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="close-modal" onclick="cerrarModal('modalEditarLog')">&times;</span>
-            <h2 style="margin-top:0;">✏️ Editar Petición</h2>
-            <form id="formEditarLog">
-                <input type="hidden" id="editLogId">
-                <div class="form-group"><label>Código de OT</label><input type="text" id="e_codigo_ot" required></div>
-                <div class="grid-2"><div class="form-group"><label>Fecha encargo</label><input type="datetime-local" id="e_fecha_encargo" required></div><div class="form-group"><label>Finalización</label><input type="datetime-local" id="e_fecha_completada"></div></div>
-                <div class="grid-2">
-                    <div class="form-group"><label>Horas</label><input type="number" step="0.1" id="e_horas" required></div>
-                    <div class="form-group">
-                        <label>Técnicos</label>
-                        <div style="display:flex; gap:10px;"><select id="e_selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding:10px;" onclick="agregarETecnicoOT()">Añadir</button></div>
-                        <div id="e_listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div>
-                    </div>
-                </div>
-                <div class="form-group"><label>Marca</label><input type="text" id="e_marca" required></div>
-                <div class="grid-2"><div class="form-group"><label>Urgencia</label><select id="e_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div><div class="form-group"><label>Materiales (€)</label><input type="number" step="0.01" id="e_materiales_precio" required></div></div>
-                <button type="button" class="btn-save" onclick="guardarEdicionLog()">Guardar Cambios</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="modalLogs" class="modal"><div class="modal-content" style="max-width: 1000px;"><span class="close-modal" onclick="cerrarModal('modalLogs')">&times;</span><h2 style="margin-top:0;">📝 Historial y Auditoría</h2><div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;"><select id="filtroLogAccion" onchange="renderizarLogs()" style="width:auto;"><option value="TODAS">Todas las Acciones</option><option value="Añadir OT">Añadir OT</option><option value="Editar OT">Editar OT</option><option value="Eliminar OT">Eliminar OT</option></select><select id="filtroLogEstado" onchange="renderizarLogs()" style="width:auto;"><option value="TODOS">Todos los Estados</option><option value="PENDIENTE">Pendientes</option><option value="APROBADO">Aprobados</option><option value="RECHAZADO">Rechazados</option></select></div><div class="tabla-logs-container"><table class="tabla-logs"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="cuerpoLogs"></tbody></table></div></div></div>
-    <div id="modalPassword" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalPassword')">&times;</span><h2 style="margin-top:0;">🔑 Cambiar Clave</h2><input type="password" id="oldPass" placeholder="Contraseña actual" class="form-group"><input type="password" id="newPass" placeholder="Nueva contraseña" class="form-group"><button class="btn-save" onclick="guardarPassword()">Guardar</button></div></div>
-    <div id="modalTecnico" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalTecnico')">&times;</span><h2 style="margin-top:0;">👷 Crear Técnico</h2><input type="text" id="newTecUser" placeholder="Nombre de usuario" class="form-group"><input type="text" id="newTecPass" placeholder="Contraseña asignada" class="form-group"><button class="btn-save" onclick="crearTecnico()">Crear Usuario</button></div></div>
+    <div id="modalEditarLog" class="modal"><div class="modal-content" style="max-width: 600px;"><span class="close-modal" onclick="cerrarModal('modalEditarLog')">&times;</span><h2 style="margin-top:0;">✏️ Editar Petición</h2><form id="formEditarLog"><input type="hidden" id="editLogId"><div class="form-group"><label>Código de OT</label><input type="text" id="e_codigo_ot" required></div><div class="grid-2"><div class="form-group"><label>Fecha encargo</label><input type="datetime-local" id="e_fecha_encargo" required></div><div class="form-group"><label>Finalización</label><input type="datetime-local" id="e_fecha_completada"></div></div><div class="grid-2"><div class="form-group"><label>Horas</label><input type="number" step="0.1" id="e_horas" required></div><div class="form-group"><label>Técnicos</label><div style="display:flex; gap:10px;"><select id="e_selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding:10px;" onclick="agregarETecnicoOT()">Añadir</button></div><div id="e_listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div></div></div><div class="form-group"><label>Marca</label><input type="text" id="e_marca" required></div><div class="grid-2"><div class="form-group"><label>Urgencia</label><select id="e_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div><div class="form-group"><label>Materiales (€)</label><input type="number" step="0.01" id="e_materiales_precio" required></div></div><button type="button" class="btn-save" onclick="guardarEdicionLog()">Guardar Cambios</button></form></div></div>
+    <div id="modalLogs" class="modal"><div class="modal-content" style="max-width: 1000px;"><span class="close-modal" onclick="cerrarModal('modalLogs')">&times;</span><h2 style="margin-top:0;">📝 Auditoría</h2><table class="tabla-logs"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="cuerpoLogs"></tbody></table></div></div>
+    <div id="modalPassword" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalPassword')">&times;</span><h2 style="margin-top:0;">🔑 Cambiar Clave</h2><input type="password" id="oldPass" placeholder="Actual" class="form-group"><input type="password" id="newPass" placeholder="Nueva" class="form-group"><button class="btn-save" onclick="guardarPassword()">Guardar</button></div></div>
+    <div id="modalTecnico" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalTecnico')">&times;</span><h2 style="margin-top:0;">👷 Crear Técnico</h2><input type="text" id="newTecUser" placeholder="Usuario" class="form-group"><input type="text" id="newTecPass" placeholder="Clave" class="form-group"><button class="btn-save" onclick="crearTecnico()">Crear</button></div></div>
 
     <script>
         const sesionStr = localStorage.getItem('sesionPlusUltra');
@@ -263,9 +244,9 @@
         const imgDefecto = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
         const imgClienteDef = "https://cdn-icons-png.flaticon.com/512/3135/3135768.png";
         
-        let otsGlobal = [], logsGlobal = [], clientesGlobal = [], lineasFactura = [], otActualId = null, otActualCodigo = '';
-        let tecnicosSeleccionados = []; // Array de técnicos para la nueva OT
-        let e_tecnicosSeleccionados = []; // Array de técnicos para el modal de editar
+        let otsGlobal = [], logsGlobal = [], clientesGlobal = [], lineasFactura = [];
+        let otActualId = null, otActualCodigo = '';
+        let tecnicosSeleccionados = [], e_tecnicosSeleccionados = []; 
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
         const prefijoAnoActual = `OT${new Date().getFullYear().toString().slice(-2)}/`;
 
@@ -284,43 +265,93 @@
             }
             if (sesion.rol === 'admin') document.getElementById('menuSolicitudesArea').innerHTML = `<button class="btn-side" style="background: #e67e22;" onclick="abrirSolicitudesClientes()">🔔 Solicitudes Nuevos Clientes</button>`;
             if (sesion.rol === 'director') { document.getElementById('btnGuardarMain').innerText = "Enviar OT a Revisión (Standby)"; document.getElementById('btnGuardarCliente').innerText = "Enviar Cliente a Revisión"; }
-            
             cargarUsuariosParaOT();
         }
 
-        // === MAGIA DE TÉCNICOS DINÁMICOS ===
+        // --- COMPRESOR INTELIGENTE DE IMÁGENES ---
+        function comprimirImagen(file, callback) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Reduce 4000px de iPhone a 800px legibles
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    // Exporta como JPEG muy comprimido pero legible
+                    const base64 = canvas.toDataURL('image/jpeg', 0.6); 
+                    callback(base64);
+                };
+            };
+        }
+
+        // --- TICKETS Y FACTURAS (PASO 1) ---
+        function abrirTicketsOT(id, codigo) {
+            otActualId = id; document.getElementById('t_codigo_ot').innerText = codigo;
+            document.getElementById('t_file').value = ''; document.getElementById('t_importe').value = ''; document.getElementById('t_desc').value = '';
+            
+            fetch(`/api/ot/${id}/adjuntos`).then(res => res.json()).then(data => {
+                const galeria = document.getElementById('t_galeria'); galeria.innerHTML = '';
+                if(data.length === 0) galeria.innerHTML = '<p style="grid-column: 1/-1; color:#7f8c8d; text-align:center;">No hay tickets subidos aún.</p>';
+                data.forEach(t => {
+                    galeria.innerHTML += `
+                        <div class="ticket-card">
+                            <img src="${t.imagen}" class="ticket-img" onclick="window.open('${t.imagen}')" title="Clic para ampliar">
+                            <div class="ticket-info">
+                                <strong>${t.importe} €</strong><br>
+                                <small>${t.descripcion || 'Sin descripción'}</small><br>
+                                <small style="color:#aaa;">${t.fecha}</small>
+                            </div>
+                        </div>`;
+                });
+                abrirModal('modalTickets');
+            });
+        }
+
+        function subirTicketOT() {
+            const file = document.getElementById('t_file').files[0];
+            const importe = document.getElementById('t_importe').value;
+            const desc = document.getElementById('t_desc').value;
+
+            if(!file) { alert("❌ Debes adjuntar una foto del ticket."); return; }
+
+            // Usamos el compresor antes de enviarlo
+            comprimirImagen(file, (imagenB64) => {
+                fetch(`/api/ot/${otActualId}/adjuntos`, {
+                    method: 'POST', headers: headersSeguridad,
+                    body: JSON.stringify({ imagen: imagenB64, importe: importe, descripcion: desc })
+                }).then(res => res.json()).then(data => {
+                    if(data.error) alert("❌ " + data.error);
+                    else {
+                        alert("✅ " + data.mensaje);
+                        abrirTicketsOT(otActualId, document.getElementById('t_codigo_ot').innerText); // Recargar galería
+                        cargarOTs(); // Recargar OTs para ver el nuevo precio de materiales
+                    }
+                });
+            });
+        }
+
         function cargarUsuariosParaOT() {
             fetch('/api/usuarios/nombres').then(res => res.json()).then(data => {
-                const sel1 = document.getElementById('selTecnicosAdd'); const sel2 = document.getElementById('e_selTecnicosAdd');
-                // Limpiar antes de recargar
-                sel1.innerHTML = '<option value="">-- Seleccionar --</option>';
-                sel2.innerHTML = '<option value="">-- Seleccionar --</option>';
-                data.forEach(u => {
-                    const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`;
-                    sel1.innerHTML += opt; sel2.innerHTML += opt;
-                });
+                const s1 = document.getElementById('selTecnicosAdd'); const s2 = document.getElementById('e_selTecnicosAdd');
+                s1.innerHTML = '<option value="">-- Seleccionar --</option>'; s2.innerHTML = '<option value="">-- Seleccionar --</option>';
+                data.forEach(u => { const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`; s1.innerHTML += opt; s2.innerHTML += opt; });
             });
         }
         function agregarTecnicoOT() { const s = document.getElementById('selTecnicosAdd'); if(s.value && !tecnicosSeleccionados.includes(s.value)) { tecnicosSeleccionados.push(s.value); renderizarTecnicosOT(); } s.value = ""; }
         function quitarTecnicoOT(nombre) { tecnicosSeleccionados = tecnicosSeleccionados.filter(t => t !== nombre); renderizarTecnicosOT(); }
-        function renderizarTecnicosOT() {
-            const div = document.getElementById('listaTecnicosOT'); div.innerHTML = '';
-            tecnicosSeleccionados.forEach(t => div.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarTecnicoOT('${t}')">&times;</span></div>`);
-        }
+        function renderizarTecnicosOT() { const d = document.getElementById('listaTecnicosOT'); d.innerHTML = ''; tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarTecnicoOT('${t}')">&times;</span></div>`); }
         function agregarETecnicoOT() { const s = document.getElementById('e_selTecnicosAdd'); if(s.value && !e_tecnicosSeleccionados.includes(s.value)) { e_tecnicosSeleccionados.push(s.value); renderizarETecnicosOT(); } s.value = ""; }
         function quitarETecnicoOT(nombre) { e_tecnicosSeleccionados = e_tecnicosSeleccionados.filter(t => t !== nombre); renderizarETecnicosOT(); }
-        function renderizarETecnicosOT() {
-            const div = document.getElementById('e_listaTecnicosOT'); div.innerHTML = '';
-            e_tecnicosSeleccionados.forEach(t => div.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarETecnicoOT('${t}')">&times;</span></div>`);
-        }
+        function renderizarETecnicosOT() { const d = document.getElementById('e_listaTecnicosOT'); d.innerHTML = ''; e_tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarETecnicoOT('${t}')">&times;</span></div>`); }
 
-        function validarFormulario(codigo, fechaIn, fechaOut) {
-            if (!codigo.startsWith(prefijoAnoActual)) { alert(`❌ El código debe empezar por ${prefijoAnoActual}`); return false; }
-            if (fechaOut && new Date(fechaOut) <= new Date(fechaIn)) { alert(`❌ Finalización debe ser posterior a inicio.`); return false; }
-            return true;
-        }
+        function validarFormulario(codigo, fechaIn, fechaOut) { if (!codigo.startsWith(prefijoAnoActual)) { alert(`❌ Debe empezar por ${prefijoAnoActual}`); return false; } if (fechaOut && new Date(fechaOut) <= new Date(fechaIn)) { alert(`❌ Finalización posterior a inicio.`); return false; } return true; }
 
-        // === MENÚS Y CLIENTES CRM ===
         function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
         function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
         function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
@@ -331,23 +362,21 @@
             fetch('/api/clientes').then(res => res.json()).then(data => {
                 clientesGlobal = data; const cAprobados = data.filter(c => c.estado === 'APROBADO');
                 const selOt = document.getElementById('ot_cliente_id'); selOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; cAprobados.forEach(c => selOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
-                const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Consumidor Final (Sin Datos) --</option>'; cAprobados.forEach(c => selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
+                const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Consumidor Final --</option>'; cAprobados.forEach(c => selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
             });
         }
         function renderizarBurbujasClientes() {
-            const grid = document.getElementById('gridClientes'); grid.innerHTML = '';
-            const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO');
+            const grid = document.getElementById('gridClientes'); grid.innerHTML = ''; const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO');
             if(aprobados.length === 0) grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Aún no hay clientes.</p>';
             aprobados.forEach(c => grid.innerHTML += `<div class="cliente-bubble" onclick="abrirDetalleCliente(${c.id})"><img src="${c.logo || imgClienteDef}" class="bubble-img"><div class="bubble-name">${c.nombre}</div></div>`);
         }
         document.getElementById('formCliente').addEventListener('submit', function(e) {
             e.preventDefault(); const file = document.getElementById('c_logo_file').files[0];
             const enviar = (logoB64) => { fetch('/api/clientes', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ nombre: document.getElementById('c_nombre').value, nif: document.getElementById('c_nif').value, direccion: document.getElementById('c_direccion').value, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, logo: logoB64 }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); document.getElementById('formCliente').reset(); cerrarModal('modalCrearCliente'); cargarClientes(); }); };
-            if(file) { const reader = new FileReader(); reader.onload = (e) => enviar(e.target.result); reader.readAsDataURL(file); } else { enviar(''); }
+            if(file) { comprimirImagen(file, enviar); } else { enviar(''); }
         });
         function abrirDetalleCliente(id) {
-            const c = clientesGlobal.find(x => x.id === id);
-            document.getElementById('d_c_logo').src = c.logo || imgClienteDef; document.getElementById('d_c_nombre').innerText = c.nombre; document.getElementById('d_c_nif').innerText = c.nif; document.getElementById('d_c_direccion').innerText = c.direccion; document.getElementById('d_c_tel').innerText = c.telefono || '-'; document.getElementById('d_c_email').innerText = c.email || '-';
+            const c = clientesGlobal.find(x => x.id === id); document.getElementById('d_c_logo').src = c.logo || imgClienteDef; document.getElementById('d_c_nombre').innerText = c.nombre; document.getElementById('d_c_nif').innerText = c.nif; document.getElementById('d_c_direccion').innerText = c.direccion; document.getElementById('d_c_tel').innerText = c.telefono || '-'; document.getElementById('d_c_email').innerText = c.email || '-';
             const ots = otsGlobal.filter(ot => ot.cliente_id === id); const divOts = document.getElementById('d_c_ots'); divOts.innerHTML = '';
             if(ots.length === 0) divOts.innerHTML = '<p>No hay OTs para este cliente.</p>';
             ots.forEach(ot => { let color = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'PENDIENTE' ? '#f39c12' : '#e74c3c'); divOts.innerHTML += `<div style="border-left: 4px solid ${color}; padding: 10px; background: #fff; margin-bottom: 8px;"><strong>${ot.codigo_ot}</strong> - ${ot.marca} <span style="float:right; color:${color};">${ot.estado}</span></div>`; });
@@ -361,7 +390,6 @@
         }
         function resolverCliente(id, estado) { fetch(`/api/clientes/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarClientes(); abrirSolicitudesClientes(); }); }
 
-        // === OTs ===
         function cargarOTs() {
             fetch('/api/ot').then(res => res.json()).then(ots => {
                 otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = '';
@@ -375,11 +403,12 @@
 
                     document.getElementById('contenedorOTs').innerHTML += `
                         <div class="ot-card">
-                            <div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca} ${sC} ${sT}</div>
+                            <div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca} ${sC} ${sT}<br><strong style="color:#e67e22;">Materiales/Tickets: ${ot.materiales_precio} €</strong></div>
                             <div class="actions">
                                 <select class="sel-estado ${ot.estado === 'HECHO' ? 'est-hecho' : (ot.estado === 'ANULADO' ? 'est-anulado' : 'est-pendiente')}" ${disable} onchange="cambiarEstado(${ot.id}, this)">
                                     <option value="PENDIENTE" ${ot.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option><option value="HECHO" ${ot.estado === 'HECHO' ? 'selected' : ''}>HECHO</option><option value="ANULADO" ${ot.estado === 'ANULADO' ? 'selected' : ''}>ANULADO</option>
                                 </select>
+                                <button class="btn-ticket" onclick="abrirTicketsOT(${ot.id}, '${ot.codigo_ot}')">🧾 Tickets</button>
                                 ${btnF} ${btnB}
                             </div>
                         </div>`;
@@ -390,128 +419,44 @@
         function eliminarOT(id) { if(confirm("¿Solicitar borrado?")) fetch(`/api/ot/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
 
         document.getElementById('formOT').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico (Añádelo a la lista)."); return; }
-            
-            const codigo = document.getElementById('codigo_ot').value;
-            const fechaEn = document.getElementById('fecha_encargo').value;
-            const fechaCo = document.getElementById('fecha_completada').value;
+            e.preventDefault(); if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; }
+            const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value;
             if (!validarFormulario(codigo, fechaEn, fechaCo)) return;
-
             const datos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('materiales_precio').value), cliente_id: document.getElementById('ot_cliente_id').value || null };
             fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); cargarOTs(); }});
         });
 
-        // === FACTURAS ===
+        // FACTURAS
         function abrirGeneradorFactura(id) {
             const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot;
             document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES');
             document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura();
-            
-            // LA MAGIA DE LA FACTURACIÓN (num_tecnicos es el .length del array de seleccionados)
-            lineasFactura = [{ concepto: "Desplazamiento a zona", cantidad: 1, precio: 40.00 }, { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }];
+            lineasFactura = [{ concepto: "Desplazamiento", cantidad: 1, precio: 40.00 }, { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }];
             renderizarTablaFactura(); abrirModal('modalFactura');
         }
         function actualizarInfoClienteFactura() {
-            const id = document.getElementById('selClienteFactura').value; const divInfo = document.getElementById('infoClienteFacturaTexto'); const divPrintName = document.getElementById('printClienteNombre');
+            const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto');
             if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; }
             const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`;
         }
         function renderizarTablaFactura() {
             const tbody = document.getElementById('tbodyLineas'); tbody.innerHTML = ''; let baseImponible = 0;
-            lineasFactura.forEach((linea, index) => {
-                const totalLinea = linea.cantidad * linea.precio; baseImponible += totalLinea;
-                tbody.innerHTML += `<tr><td><input type="text" value="${linea.concepto}" onchange="actualizarLinea(${index}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${linea.cantidad}" onchange="actualizarLinea(${index}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${linea.precio}" onchange="actualizarLinea(${index}, 'precio', this.value)"></td><td style="text-align:right; font-weight:bold;">${totalLinea.toFixed(2)} €</td><td style="text-align:center;"><button class="btn-peligro" style="padding: 5px;" onclick="borrarLineaFactura(${index})">🗑️</button></td></tr>`;
-            });
-            const iva = baseImponible * 0.21;
-            document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2);
+            lineasFactura.forEach((l, idx) => { const t = l.cantidad * l.precio; baseImponible += t; tbody.innerHTML += `<tr><td><input type="text" value="${l.concepto}" onchange="actualizarLinea(${idx}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${l.cantidad}" onchange="actualizarLinea(${idx}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${l.precio}" onchange="actualizarLinea(${idx}, 'precio', this.value)"></td><td style="text-align:right;">${t.toFixed(2)} €</td><td><button class="btn-peligro" onclick="borrarLineaFactura(${idx})">🗑️</button></td></tr>`; });
+            const iva = baseImponible * 0.21; document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2);
         }
-        function actualizarLinea(index, campo, valor) { lineasFactura[index][campo] = campo === 'concepto' ? valor : (parseFloat(valor) || 0); renderizarTablaFactura(); }
+        function actualizarLinea(i, c, v) { lineasFactura[i][c] = c === 'concepto' ? v : (parseFloat(v) || 0); renderizarTablaFactura(); }
         function agregarLineaBlanco() { lineasFactura.push({ concepto: "", cantidad: 1, precio: 0.00 }); renderizarTablaFactura(); }
-        function borrarLineaFactura(index) { lineasFactura.splice(index, 1); renderizarTablaFactura(); }
-        function guardarFacturaDefinitiva() {
-            const cId = document.getElementById('selClienteFactura').value; const cNif = cId ? clientesGlobal.find(x => x.id == cId).nif : "ConsumidorFinal";
-            const datosF = { ot_id: otActualId, codigo_ot: otActualCodigo, base_imponible: parseFloat(document.getElementById('factBase').innerText), iva: parseFloat(document.getElementById('factIva').innerText), total: parseFloat(document.getElementById('factTotal').innerText) };
-            fetch('/api/factura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosF) }).then(res => res.json()).then(data => {
-                if(data.error) alert("❌ " + data.error); else { document.getElementById('zonaQR').innerHTML = `<img src="${data.qr_data}" style="width:130px; height:130px;">`; document.getElementById('btnEmitir').innerText = "🖨️ Imprimir Factura"; document.getElementById('btnEmitir').onclick = () => window.print(); }
-            });
-        }
+        function borrarLineaFactura(i) { lineasFactura.splice(i, 1); renderizarTablaFactura(); }
+        function guardarFacturaDefinitiva() { alert("Imprimiendo en PDF. La opción de Enviar por Mail la añadiremos después."); window.print(); }
 
-        // === LOGS (AUDITORÍA) ===
-        function abrirLogs() { fetch('/api/logs').then(res => res.json()).then(data => { logsGlobal = data; renderizarLogs(); abrirModal('modalLogs'); }); }
-        function renderizarLogs() {
-            const fAccion = document.getElementById('filtroLogAccion').value; const fEstado = document.getElementById('filtroLogEstado').value; const tbody = document.getElementById('cuerpoLogs'); tbody.innerHTML = '';
-            logsGlobal.filter(l => (fAccion === 'TODAS' || l.accion.includes(fAccion)) && (fEstado === 'TODOS' || l.estado === fEstado)).forEach(log => {
-                let badgeClass = log.estado === 'PENDIENTE' ? 'bg-pend' : (log.estado === 'APROBADO' ? 'bg-ok' : 'bg-ko'); let botones = '';
-                if (log.estado === 'PENDIENTE') {
-                    if (log.accion === 'Añadir OT' && (sesion.rol === 'admin' || sesion.rol === 'director')) botones += `<button class="btn-editar" onclick="abrirEditarLog(${log.id})" title="Editar Petición">✏️</button> `;
-                    if (sesion.rol === 'admin') botones += `<button style="background:#27ae60; border:none; color:white; padding:5px; border-radius:3px; cursor:pointer;" onclick="resolverLog(${log.id}, 'APROBADO')">✅</button> <button style="background:#e74c3c; border:none; color:white; padding:5px; border-radius:3px; cursor:pointer;" onclick="resolverLog(${log.id}, 'RECHAZADO')">❌</button>`;
-                }
-                tbody.innerHTML += `<tr><td style="font-size:0.8em;">${log.fecha}</td><td><strong>${log.usuario}</strong></td><td>${log.accion}</td><td style="max-width:200px; word-wrap:break-word;">${log.referencia}</td><td><span class="badge-log ${badgeClass}">${log.estado}</span></td><td>${botones || '-'}</td></tr>`;
-            });
-        }
-        function resolverLog(id, resolucion) {
-            let m = ""; if (resolucion === 'RECHAZADO') { m = prompt("Motivo:"); if (!m) return; } else { if(!confirm(`¿Deseas APROBAR?`)) return; }
-            fetch(`/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion, motivo: m }) }).then(res => res.json()).then(data => { alert(data.mensaje); abrirLogs(); cargarOTs(); });
-        }
-        function abrirEditarLog(id) {
-            const log = logsGlobal.find(l => l.id === id); const datos = JSON.parse(log.datos);
-            document.getElementById('editLogId').value = id; document.getElementById('e_codigo_ot').value = datos.codigo_ot; document.getElementById('e_fecha_encargo').value = datos.fecha_encargo; document.getElementById('e_fecha_completada').value = datos.fecha_completada || ''; document.getElementById('e_horas').value = datos.horas; document.getElementById('e_marca').value = datos.marca; document.getElementById('e_tipo_urgencia').value = datos.tipo_urgencia; document.getElementById('e_materiales_precio').value = datos.materiales_precio;
-            e_tecnicosSeleccionados = datos.tecnicos_nombres ? datos.tecnicos_nombres.split(', ') : []; renderizarETecnicosOT();
-            abrirModal('modalEditarLog');
-        }
-        function guardarEdicionLog() {
-            const id = document.getElementById('editLogId').value; const codigo = document.getElementById('e_codigo_ot').value; const fechaEn = document.getElementById('e_fecha_encargo').value; const fechaCo = document.getElementById('e_fecha_completada').value;
-            if (!validarFormulario(codigo, fechaEn, fechaCo)) return;
-            if (e_tecnicosSeleccionados.length === 0) { alert("❌ Añade al menos un técnico."); return; }
-            const nuevosDatos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('e_horas').value), num_tecnicos: e_tecnicosSeleccionados.length, tecnicos_nombres: e_tecnicosSeleccionados.join(', '), marca: document.getElementById('e_marca').value, tipo_urgencia: document.getElementById('e_tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('e_materiales_precio').value) };
-            fetch(`/api/logs/${id}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ nuevosDatos }) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("✅ " + data.mensaje); cerrarModal('modalEditarLog'); abrirLogs(); }});
-        }
+        // LOGS & PASSWORDS
+        function abrirLogs() { fetch('/api/logs').then(res => res.json()).then(data => { logsGlobal = data; const tbody = document.getElementById('cuerpoLogs'); tbody.innerHTML = ''; data.forEach(log => { let bc = log.estado === 'PENDIENTE' ? 'f39c12' : (log.estado === 'APROBADO' ? '27ae60' : 'e74c3c'); let b = ''; if (log.estado === 'PENDIENTE' && sesion.rol === 'admin') b = `<button onclick="resolverLog(${log.id}, 'APROBADO')">✅</button> <button onclick="resolverLog(${log.id}, 'RECHAZADO')">❌</button>`; tbody.innerHTML += `<tr><td>${log.fecha}</td><td>${log.usuario}</td><td>${log.accion}</td><td>${log.referencia}</td><td><span class="badge-log" style="background:#${bc}">${log.estado}</span></td><td>${b||'-'}</td></tr>`; }); abrirModal('modalLogs'); }); }
+        function resolverLog(id, res) { let m = ""; if (res === 'RECHAZADO') { m = prompt("Motivo:"); if (!m) return; } fetch(`/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion: res, motivo: m }) }).then(r => r.json()).then(d => { alert(d.mensaje); abrirLogs(); cargarOTs(); }); }
+        function guardarPassword() { fetch('/api/usuarios/password', { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ username: sesion.username, oldPass: document.getElementById('oldPass').value, newPass: document.getElementById('newPass').value }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalPassword'); } }); }
+        function crearTecnico() { const u = document.getElementById('newTecUser').value; const p = document.getElementById('newTecPass').value; if(!u || !p) return; fetch('/api/usuarios/tecnico', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ username: u, password: p }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalTecnico'); cargarUsuariosParaOT(); } }); }
 
-        function guardarPassword() {
-            const oldP = document.getElementById('oldPass').value;
-            const newP = document.getElementById('newPass').value;
-            fetch('/api/usuarios/password', {
-                method: 'PUT', headers: headersSeguridad,
-                body: JSON.stringify({ username: sesion.username, oldPass: oldP, newPass: newP })
-            }).then(res => res.json()).then(data => {
-                if(data.error) alert("❌ " + data.error);
-                else { alert("✅ " + data.mensaje); cerrarModal('modalPassword'); }
-            });
-        }
-
-        function crearTecnico() {
-            const user = document.getElementById('newTecUser').value;
-            const pass = document.getElementById('newTecPass').value;
-            
-            if(!user || !pass) { alert("❌ Por favor, rellena el usuario y la contraseña."); return; }
-
-            fetch('/api/usuarios/tecnico', {
-                method: 'POST', headers: headersSeguridad,
-                body: JSON.stringify({ username: user, password: pass })
-            }).then(res => res.json()).then(data => {
-                if(data.error) alert("❌ " + data.error);
-                else { 
-                    alert("✅ " + data.mensaje); 
-                    cerrarModal('modalTecnico'); 
-                    document.getElementById('newTecUser').value = '';
-                    document.getElementById('newTecPass').value = '';
-                    
-                    cargarUsuariosParaOT(); 
-                }
-            });
-        }
-
-        // --- PWA SERVICE WORKER REGISTRATION ---
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-            .then(() => console.log("Service Worker Registrado"));
-        }
-
-        // --- ARRANQUE ---
-        inicializarUI();
-        cargarClientes();
-        setTimeout(cargarOTs, 500);
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+        inicializarUI(); cargarClientes(); setTimeout(cargarOTs, 500);
     </script>
 </body>
 </html>
