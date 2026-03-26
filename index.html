@@ -35,8 +35,7 @@
         .btn-ticket { background-color: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-peligro { background-color: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-secundario { background-color: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; }
-        .btn-editar { background-color: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-
+        
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .avatar-mini { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ccc; cursor: pointer; object-fit: cover; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; }
 
@@ -99,6 +98,11 @@
         .gasto-item:last-child { border-bottom: none; }
         .bal-positivo { color: #27ae60; font-weight: bold; }
         .bal-negativo { color: #e74c3c; font-weight: bold; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .checkbox-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; }
+        
+        .linea-desglose { padding: 8px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.95em; }
+        .linea-desglose:last-child { border-bottom: none; }
 
         @media screen and (max-width: 768px) {
             body { padding: 10px; } .container { padding: 15px; } .grid-2 { grid-template-columns: 1fr; gap: 10px; }
@@ -191,7 +195,6 @@
             <div id="menuGastosArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
                 <button class="btn-side" style="background: #e67e22; font-size: 1.1em; font-weight: bold;" onclick="abrirGastosSocios()">💸 Control de Gastos (Socios)</button>
             </div>
-
             <button class="btn-side" style="background: #9b59b6; margin-bottom: 20px;" onclick="probarEnvioCorreo()">📧 Probar Envío de Correo</button>
 
             <div id="menuClientesArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
@@ -211,10 +214,10 @@
         <div class="modal-content" style="max-width: 700px;">
             <span class="close-modal" onclick="cerrarModal('modalGastos')">&times;</span>
             <h2 style="margin-top:0;">💸 Cuentas Claras (Socios)</h2>
-            <p style="color:#7f8c8d; text-align: center; margin-top: -10px;">Añade los gastos de la empresa y el sistema calculará los saldos automáticamente.</p>
+            <p style="color:#7f8c8d; text-align: center; margin-top: -10px;">Añade los gastos y el sistema calculará los saldos. Haz clic en tu nombre abajo para ver el desglose.</p>
 
             <div style="background: #f8f9fa; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0; color: #34495e;">Añadir nuevo ticket / gasto</h4>
+                <h4 style="margin: 0 0 10px 0; color: #34495e;">Añadir nuevo gasto</h4>
                 <form id="formGastoSocio">
                     <div class="grid-2">
                         <div class="form-group">
@@ -227,7 +230,17 @@
                         </div>
                         <div class="form-group"><label>Importe Total (€)</label><input type="number" step="0.01" id="g_importe" placeholder="Ej: 50.00" required></div>
                     </div>
-                    <div class="form-group"><label>Concepto</label><input type="text" id="g_concepto" placeholder="Ej: Gasolina furgoneta, Comida Leroy Merlin..." required></div>
+                    <div class="form-group"><label>Concepto</label><input type="text" id="g_concepto" placeholder="Ej: Comida, Herramientas..." required></div>
+                    
+                    <div class="form-group">
+                        <label>¿Entre quiénes se reparte este gasto?</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="chk_implicados" value="Giancarlo" checked> Giancarlo</label>
+                            <label><input type="checkbox" name="chk_implicados" value="David" checked> David</label>
+                            <label><input type="checkbox" name="chk_implicados" value="Kevin" checked> Kevin</label>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn-save" style="margin-top: 0; padding: 10px;">Añadir Gasto</button>
                 </form>
             </div>
@@ -243,61 +256,23 @@
         </div>
     </div>
 
-    <div id="modalTickets" class="modal">
-        <div class="modal-content" style="max-width: 650px;">
-            <span class="close-modal" onclick="cerrarModal('modalTickets')">&times;</span>
-            <h2 style="margin-top:0;">🧾 Tickets y Facturas</h2>
-            <p style="color:#7f8c8d; font-size: 0.9em;">OT: <strong id="t_codigo_ot" style="color:#2c3e50;"></strong></p>
-            
-            <div style="background: #e8f8f5; border: 1px solid #1abc9c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0; color: #16a085;">Subir nuevo ticket</h4>
-                <div class="grid-2">
-                    <div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div>
-                    <div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div>
-                </div>
-                <div class="form-group"><label>Descripción (Opcional)</label><input type="text" id="t_desc" placeholder="Ej: Recambio Leroy Merlin..."></div>
-                <button class="btn-save" style="margin-top: 0; padding: 10px;" onclick="subirTicketOT()">Subir Ticket</button>
+    <div id="modalDesgloseSplitwise" class="modal" style="z-index: 5000; background: rgba(0,0,0,0.8);">
+        <div class="modal-content" style="max-width: 500px; padding: 20px;">
+            <span class="close-modal" onclick="cerrarModal('modalDesgloseSplitwise')">&times;</span>
+            <h3 style="margin-top:0; border-bottom: 2px solid #1abc9c; padding-bottom: 10px;">🔍 Desglose de <span id="desgloseNombre"></span></h3>
+            <div style="text-align: center; margin-bottom: 15px; font-size: 1.2em;">
+                Balance Final: <strong id="desgloseTotal"></strong>
             </div>
-
-            <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Galería de Tickets</h3>
-            <div id="t_galeria" class="ticket-gallery"></div>
+            <div id="desgloseOperaciones" style="max-height: 400px; overflow-y: auto; background: #f8f9fa; border: 1px solid #ccc; border-radius: 5px;"></div>
         </div>
     </div>
 
+    <div id="modalTickets" class="modal"><div class="modal-content" style="max-width: 650px;"><span class="close-modal" onclick="cerrarModal('modalTickets')">&times;</span><h2 style="margin-top:0;">🧾 Tickets y Facturas</h2><p style="color:#7f8c8d; font-size: 0.9em;">OT: <strong id="t_codigo_ot" style="color:#2c3e50;"></strong></p><div style="background: #e8f8f5; border: 1px solid #1abc9c; padding: 15px; border-radius: 8px; margin-bottom: 20px;"><h4 style="margin: 0 0 10px 0; color: #16a085;">Subir nuevo ticket</h4><div class="grid-2"><div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div><div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div></div><div class="form-group"><label>Descripción (Opcional)</label><input type="text" id="t_desc" placeholder="Ej: Recambio Leroy Merlin..."></div><button class="btn-save" style="margin-top: 0; padding: 10px;" onclick="subirTicketOT()">Subir Ticket</button></div><h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Galería de Tickets</h3><div id="t_galeria" class="ticket-gallery"></div></div></div>
     <div id="modalClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalClientes')">&times;</span><h2>👥 Cartera de Clientes</h2><div id="gridClientes" class="clientes-grid"></div></div></div>
     <div id="modalCrearCliente" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalCrearCliente')">&times;</span><h2>🏢 Registrar Nuevo Cliente</h2><form id="formCliente"><div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="c_nombre" required></div><div class="form-group"><label>NIF / CIF</label><input type="text" id="c_nif" required></div><div class="form-group"><label>Dirección Fiscal</label><input type="text" id="c_direccion" required></div><div class="grid-2"><div class="form-group"><label>Teléfono</label><input type="text" id="c_telefono"></div><div class="form-group"><label>Email</label><input type="email" id="c_email"></div></div><div class="form-group"><label>Logotipo (Opcional)</label><input type="file" id="c_logo_file" accept="image/*"></div><button type="submit" class="btn-save" id="btnGuardarCliente">Guardar Cliente</button></form></div></div>
     <div id="modalDetalleCliente" class="modal"><div class="modal-content" style="max-width: 700px;"><span class="close-modal" onclick="cerrarModal('modalDetalleCliente')">&times;</span><div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px;"><img id="d_c_logo" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c;"><h2 id="d_c_nombre" style="margin: 10px 0 0 0;"></h2></div><div class="cliente-detalle-box"><p><strong>NIF/CIF:</strong> <span id="d_c_nif"></span></p><p><strong>Dirección:</strong> <span id="d_c_direccion"></span></p><p><strong>Contacto:</strong> <span id="d_c_tel"></span> | <span id="d_c_email"></span></p></div><h3>🛠️ Historial de OTs</h3><div id="d_c_ots" style="max-height: 300px; overflow-y: auto;"></div></div></div>
     <div id="modalSolicitudesClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalSolicitudesClientes')">&times;</span><h2>🔔 Solicitudes de Clientes</h2><table class="tabla-logs"><thead><tr><th>Cliente</th><th>NIF</th><th>Añadido por</th><th>Acción</th></tr></thead><tbody id="tbodySolicitudesClientes"></tbody></table></div></div>
-
-    <div id="modalFactura" class="modal">
-        <div class="modal-content modal-content-folio" id="facturaAreaImpresion">
-            <span class="close-modal no-print" onclick="cerrarModal('modalFactura')">&times;</span>
-            <div class="factura-header">
-                <div class="datos-empresa"><img src="/logo.png" style="max-width: 240px; margin-bottom: 10px;" onerror="this.style.display='none'"><h3>ServiPlusUltra Solutions S.L.</h3><p>B-26892760</p><p>Carrer d'Aribau 168, 1-1, 08036 BCN</p></div>
-                <div class="datos-factura">
-                    <h2>FACTURA</h2><p><strong>Ref:</strong> <span id="factOtCode"></span></p><p><strong>Fecha:</strong> <span id="factFechaHoy"></span></p>
-                    <div class="caja-cliente-fact">
-                        <strong>Facturar a:</strong>
-                        <select id="selClienteFactura" class="no-print" onchange="actualizarInfoClienteFactura()" style="width:100%; padding:8px; margin-top:5px;"></select>
-                        <div id="printClienteNombre" class="only-print" style="font-weight:bold; font-size:1.1em;"></div>
-                        <div id="infoClienteFacturaTexto" style="font-size:0.9em; margin-top:5px;"></div>
-                    </div>
-                </div>
-            </div>
-            <table class="tabla-holded" id="tablaLineasFactura">
-                <thead><tr><th style="width: 50%;">Concepto</th><th>Cant.</th><th>Precio/U (€)</th><th style="text-align: right;">Total</th><th style="width: 5%;" class="no-print"></th></tr></thead>
-                <tbody id="tbodyLineas"></tbody>
-            </table>
-            <button class="btn-secundario no-print" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea</button>
-            <div style="display:flex; justify-content:flex-end; margin-top:30px;"><div class="totales-caja"><p>Base: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total: <span id="factTotal">0.00</span> €</h3></div></div>
-            
-            <div style="display: flex; gap: 15px; margin-top: 40px;" class="no-print">
-                <button class="btn-secundario" style="flex-grow: 1; padding: 15px; font-size: 16px;" onclick="window.print()">🖨️ Imprimir PDF Local</button>
-                <button class="btn-save" style="flex-grow: 1; margin-top: 0; background-color: #9b59b6;" onclick="enviarFacturaAlCliente()">📧 Enviar Factura por Email</button>
-            </div>
-        </div>
-    </div>
-
+    <div id="modalFactura" class="modal"><div class="modal-content modal-content-folio" id="facturaAreaImpresion"><span class="close-modal no-print" onclick="cerrarModal('modalFactura')">&times;</span><div class="factura-header"><div class="datos-empresa"><img src="/logo.png" style="max-width: 240px; margin-bottom: 10px;" onerror="this.style.display='none'"><h3>ServiPlusUltra Solutions S.L.</h3><p>B-26892760</p><p>Carrer d'Aribau 168, 1-1, 08036 BCN</p></div><div class="datos-factura"><h2>FACTURA</h2><p><strong>Ref:</strong> <span id="factOtCode"></span></p><p><strong>Fecha:</strong> <span id="factFechaHoy"></span></p><div class="caja-cliente-fact"><strong>Facturar a:</strong><select id="selClienteFactura" class="no-print" onchange="actualizarInfoClienteFactura()" style="width:100%; padding:8px; margin-top:5px;"></select><div id="printClienteNombre" class="only-print" style="font-weight:bold; font-size:1.1em;"></div><div id="infoClienteFacturaTexto" style="font-size:0.9em; margin-top:5px;"></div></div></div></div><table class="tabla-holded" id="tablaLineasFactura"><thead><tr><th style="width: 50%;">Concepto</th><th>Cant.</th><th>Precio/U (€)</th><th style="text-align: right;">Total</th><th style="width: 5%;" class="no-print"></th></tr></thead><tbody id="tbodyLineas"></tbody></table><button class="btn-secundario no-print" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea</button><div style="display:flex; justify-content:flex-end; margin-top:30px;"><div class="totales-caja"><p>Base: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total: <span id="factTotal">0.00</span> €</h3></div></div><div style="display: flex; gap: 15px; margin-top: 40px;" class="no-print"><button class="btn-secundario" style="flex-grow: 1; padding: 15px; font-size: 16px;" onclick="window.print()">🖨️ Imprimir PDF Local</button><button class="btn-save" style="flex-grow: 1; margin-top: 0; background-color: #9b59b6;" onclick="enviarFacturaAlCliente()">📧 Enviar Factura por Email</button></div></div></div>
     <div id="modalEditarLog" class="modal"><div class="modal-content" style="max-width: 600px;"><span class="close-modal" onclick="cerrarModal('modalEditarLog')">&times;</span><h2 style="margin-top:0;">✏️ Editar Petición</h2><form id="formEditarLog"><input type="hidden" id="editLogId"><div class="form-group"><label>Código de OT</label><input type="text" id="e_codigo_ot" required></div><div class="grid-2"><div class="form-group"><label>Fecha encargo</label><input type="datetime-local" id="e_fecha_encargo" required></div><div class="form-group"><label>Finalización</label><input type="datetime-local" id="e_fecha_completada"></div></div><div class="grid-2"><div class="form-group"><label>Horas</label><input type="number" step="0.1" id="e_horas" required></div><div class="form-group"><label>Técnicos</label><div style="display:flex; gap:10px;"><select id="e_selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding:10px;" onclick="agregarETecnicoOT()">Añadir</button></div><div id="e_listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div></div></div><div class="form-group"><label>Marca</label><input type="text" id="e_marca" required></div><div class="grid-2"><div class="form-group"><label>Urgencia</label><select id="e_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div><div class="form-group"><label>Materiales (€)</label><input type="number" step="0.01" id="e_materiales_precio" required></div></div><button type="button" class="btn-save" onclick="guardarEdicionLog()">Guardar Cambios</button></form></div></div>
     <div id="modalLogs" class="modal"><div class="modal-content" style="max-width: 1000px;"><span class="close-modal" onclick="cerrarModal('modalLogs')">&times;</span><h2 style="margin-top:0;">📝 Auditoría</h2><table class="tabla-logs"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="cuerpoLogs"></tbody></table></div></div>
     <div id="modalPassword" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalPassword')">&times;</span><h2 style="margin-top:0;">🔑 Cambiar Clave</h2><input type="password" id="oldPass" placeholder="Actual" class="form-group"><input type="password" id="newPass" placeholder="Nueva" class="form-group"><button class="btn-save" onclick="guardarPassword()">Guardar</button></div></div>
@@ -325,12 +300,11 @@
             document.getElementById('codigo_ot').placeholder = `${prefijoAnoActual}00001`;
 
             if (sesion.rol === 'admin' || sesion.rol === 'director') {
-                document.getElementById('menuGastosArea').style.display = 'block'; // Muestra botón Splitwise
+                document.getElementById('menuGastosArea').style.display = 'block'; 
                 document.getElementById('menuClientesArea').style.display = 'block';
                 document.getElementById('btnCrearTecnicoArea').innerHTML = `<button class="btn-side" onclick="abrirModal('modalTecnico')">👷 Crear Perfil Técnico</button>`;
                 document.getElementById('btnLogsArea').innerHTML = `<button class="btn-side" style="background-color: #f39c12; margin-top: 20px;" onclick="abrirLogs()">📝 Registro de Auditoría</button>`;
                 
-                // Si el que entra en el módulo de gastos es Giancarlo, David o Kevin, lo ponemos por defecto en el select
                 if(['Giancarlo', 'David', 'Kevin'].includes(sesion.username)) {
                     document.getElementById('g_pagador').value = sesion.username;
                 }
@@ -340,19 +314,22 @@
             cargarUsuariosParaOT();
         }
 
-        // --- ALGORITMO MAGICO: SPLITWISE / GASTOS ---
+        // --- ALGORITMO MAGICO: SPLITWISE CON REPARTO CUSTOM Y DESGLOSE ---
         function abrirGastosSocios() {
             fetch('/api/gastos', { headers: headersSeguridad }).then(res => res.json()).then(gastos => {
                 renderizarDeudas(gastos);
                 
-                // Pintar el historial abajo
                 const divHistorial = document.getElementById('listaHistorialGastos');
                 divHistorial.innerHTML = '';
                 if(gastos.length === 0) divHistorial.innerHTML = '<p style="text-align:center; padding: 10px; color:#aaa;">No hay gastos registrados aún.</p>';
                 gastos.forEach(g => {
+                    let imp = g.implicados ? g.implicados.split(',').join(', ') : 'Todos';
                     divHistorial.innerHTML += `
                         <div class="gasto-item">
-                            <div><strong>${g.concepto}</strong> <br> <small style="color:#7f8c8d;">Pagado por: ${g.pagador} el ${g.fecha}</small></div>
+                            <div>
+                                <strong>${g.concepto}</strong> <br> 
+                                <small style="color:#7f8c8d;">Paga: ${g.pagador} | Reparten: ${imp} | ${g.fecha}</small>
+                            </div>
                             <div style="text-align: right;">
                                 <strong>${g.importe.toFixed(2)} €</strong><br>
                                 <button class="btn-peligro" style="padding: 2px 5px; font-size: 0.8em; margin-top: 5px;" onclick="borrarGastoSocio(${g.id})">Borrar</button>
@@ -366,30 +343,54 @@
         function renderizarDeudas(gastos) {
             const socios = ['Giancarlo', 'David', 'Kevin'];
             let balances = { Giancarlo: 0, David: 0, Kevin: 0 };
-            let totalGastado = 0;
+            
+            // Creamos un diccionario para guardar el desglose de cada socio
+            let desglose = { Giancarlo: [], David: [], Kevin: [] };
 
-            // 1. Sumar todo lo que ha pagado cada uno
+            // 1. Recorrer cada ticket y calcular quién suma y quién resta
             gastos.forEach(g => {
-                if (balances[g.pagador] !== undefined) {
-                    balances[g.pagador] += parseFloat(g.importe);
-                    totalGastado += parseFloat(g.importe);
+                const pagador = g.pagador;
+                const importe = parseFloat(g.importe);
+                
+                // Si son gastos antiguos que no tenían la columna, asumimos que son los 3
+                const implicadosStr = g.implicados || 'Giancarlo,David,Kevin';
+                const implicados = implicadosStr.split(',');
+                
+                // La parte que le toca a cada uno de los marcados en ese gasto
+                const cuota = importe / implicados.length;
+
+                // El que paga suma puntos a su favor
+                if (balances[pagador] !== undefined) {
+                    balances[pagador] += importe;
+                    desglose[pagador].push(`<div class="linea-desglose"><span style="color:#27ae60">➕ Pagaste ${importe.toFixed(2)}€</span> por: ${g.concepto}</div>`);
                 }
+
+                // A los implicados se les resta su parte correspondiente
+                implicados.forEach(imp => {
+                    let impName = imp.trim();
+                    if (balances[impName] !== undefined) {
+                        balances[impName] -= cuota;
+                        if (impName !== pagador) {
+                            desglose[impName].push(`<div class="linea-desglose"><span style="color:#e74c3c">➖ Tu parte consumida (-${cuota.toFixed(2)}€)</span> de: ${g.concepto} (Lo pagó ${pagador})</div>`);
+                        } else {
+                            // Si él mismo lo pagó y está implicado, se lo restamos como consumo propio
+                            desglose[impName].push(`<div class="linea-desglose"><span style="color:#7f8c8d">➖ Tu propio consumo (-${cuota.toFixed(2)}€)</span> en: ${g.concepto}</div>`);
+                        }
+                    }
+                });
             });
 
-            // 2. Lo que debería haber pagado cada uno (la cuota justa)
-            const cuotaJusta = totalGastado / 3;
-
-            // 3. Separar en los que deben dinero (Deudores) y a los que se les debe (Acreedores)
+            // 2. Separar Deudores y Acreedores
             let deudores = [];
             let acreedores = [];
 
             socios.forEach(socio => {
-                let neto = balances[socio] - cuotaJusta;
+                let neto = balances[socio];
                 if (neto < -0.01) deudores.push({ nombre: socio, cantidad: Math.abs(neto) });
                 else if (neto > 0.01) acreedores.push({ nombre: socio, cantidad: neto });
             });
 
-            // 4. Cruzar deudas para simplificarlas
+            // 3. Cruzar deudas
             let transferencias = [];
             let i = 0, j = 0;
             while (i < deudores.length && j < acreedores.length) {
@@ -406,7 +407,7 @@
                 if (acreedor.cantidad < 0.01) j++;
             }
 
-            // Pintamos los resultados
+            // Pintamos resultados
             const divResumen = document.getElementById('resumenDeudas');
             if (transferencias.length === 0) {
                 divResumen.innerHTML = '<p style="color:#27ae60; font-weight:bold; font-size:1.2em;">¡Las cuentas están cuadradas a 0!</p>';
@@ -414,15 +415,42 @@
                 divResumen.innerHTML = transferencias.join('');
             }
 
-            // Pintamos los balances individuales abajo (Informativo)
+            // Pintamos las tarjetas interactivas de abajo
             let htmlBalances = '';
             socios.forEach(s => {
-                let netoInfo = balances[s] - cuotaJusta;
+                let netoInfo = balances[s];
                 let colorNeto = netoInfo >= 0 ? 'bal-positivo' : 'bal-negativo';
                 let signo = netoInfo > 0 ? '+' : '';
-                htmlBalances += `<div><strong>${s}</strong><br>Aportado: ${balances[s].toFixed(2)}€<br>Balance: <span class="${colorNeto}">${signo}${netoInfo.toFixed(2)}€</span></div>`;
+                
+                // Preparamos el HTML del desglose para mandarlo a la función del popup
+                let desgloseJSON = encodeURIComponent(JSON.stringify(desglose[s]));
+                
+                htmlBalances += `
+                <div style="cursor:pointer; padding:10px; border-radius:8px; transition:0.2s; border: 1px solid transparent;" 
+                     onmouseover="this.style.background='#fff'; this.style.borderColor='#1abc9c';" 
+                     onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';" 
+                     onclick="mostrarDesglose('${s}', '${desgloseJSON}', ${netoInfo})">
+                    <strong>${s}</strong><br>
+                    Balance: <span class="${colorNeto}">${signo}${netoInfo.toFixed(2)}€</span><br>
+                    <small style="color:#3498db;">🔍 Ver detalles</small>
+                </div>`;
             });
             document.getElementById('resumenBalances').innerHTML = htmlBalances;
+        }
+
+        // --- FUNCIÓN PARA EL POPUP DE DETALLES ---
+        function mostrarDesglose(nombre, desgloseJSON, netoInfo) {
+            document.getElementById('desgloseNombre').innerText = nombre;
+            
+            let colorNeto = netoInfo >= 0 ? 'green' : 'red';
+            let signo = netoInfo > 0 ? '+' : '';
+            document.getElementById('desgloseTotal').innerHTML = `<span style="color:${colorNeto}">${signo}${netoInfo.toFixed(2)} €</span>`;
+            
+            let operaciones = JSON.parse(decodeURIComponent(desgloseJSON));
+            let htmlOperaciones = operaciones.length > 0 ? operaciones.join('') : '<p style="padding:10px; text-align:center;">No has participado en ningún gasto aún.</p>';
+            
+            document.getElementById('desgloseOperaciones').innerHTML = htmlOperaciones;
+            abrirModal('modalDesgloseSplitwise');
         }
 
         document.getElementById('formGastoSocio').addEventListener('submit', function(e) {
@@ -430,17 +458,28 @@
             const pagador = document.getElementById('g_pagador').value;
             const importe = document.getElementById('g_importe').value;
             const concepto = document.getElementById('g_concepto').value;
+            
+            // Recoger los implicados marcados
+            const checkboxes = document.querySelectorAll('input[name="chk_implicados"]:checked');
+            const implicados = Array.from(checkboxes).map(c => c.value);
+            
+            if(implicados.length === 0) {
+                alert("❌ Debes marcar al menos a 1 persona en '¿Entre quiénes se reparte?'.");
+                return;
+            }
 
             fetch('/api/gastos', {
                 method: 'POST',
                 headers: headersSeguridad,
-                body: JSON.stringify({ pagador, importe, concepto })
+                body: JSON.stringify({ pagador, importe, concepto, implicados })
             }).then(r => r.json()).then(data => {
                 if(data.error) alert("❌ " + data.error);
                 else {
                     document.getElementById('g_importe').value = '';
                     document.getElementById('g_concepto').value = '';
-                    abrirGastosSocios(); // Recargar los cálculos
+                    // Reseteamos los checks
+                    document.querySelectorAll('input[name="chk_implicados"]').forEach(c => c.checked = true);
+                    abrirGastosSocios();
                 }
             });
         });
@@ -451,9 +490,8 @@
                 .then(r => r.json()).then(data => { abrirGastosSocios(); });
             }
         }
-        // --- FIN MÓDULO GASTOS ---
 
-        // UTILIDADES VARIAS
+        // UTILIDADES VARIAS Y FACTURACIÓN (Se mantiene el código sin cambios)
         function comprimirImagen(file, callback) { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); callback(canvas.toDataURL('image/jpeg', 0.6)); }; }; }
         function probarEnvioCorreo() { const email = prompt("Introduce tu correo para la prueba:"); if (!email) return; alert("⏳ Enviando..."); fetch('/api/test-email', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ emailDestino: email }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); }).catch(e => alert("❌ Error.")); }
 
@@ -476,13 +514,7 @@
         function abrirModal(id) { document.getElementById(id).style.display = 'block'; cerrarMenuLateral(); }
         function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        function cargarClientes() {
-            fetch('/api/clientes').then(res => res.json()).then(data => {
-                clientesGlobal = data; const cAprobados = data.filter(c => c.estado === 'APROBADO');
-                const selOt = document.getElementById('ot_cliente_id'); selOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; cAprobados.forEach(c => selOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
-                const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Seleccionar Cliente --</option>'; cAprobados.forEach(c => selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
-            });
-        }
+        function cargarClientes() { fetch('/api/clientes').then(res => res.json()).then(data => { clientesGlobal = data; const cAprobados = data.filter(c => c.estado === 'APROBADO'); const selOt = document.getElementById('ot_cliente_id'); selOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; cAprobados.forEach(c => selOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`); const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Seleccionar Cliente --</option>'; cAprobados.forEach(c => selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`); }); }
         function renderizarBurbujasClientes() { const grid = document.getElementById('gridClientes'); grid.innerHTML = ''; const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO'); if(aprobados.length === 0) grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Aún no hay clientes.</p>'; aprobados.forEach(c => grid.innerHTML += `<div class="cliente-bubble" onclick="abrirDetalleCliente(${c.id})"><img src="${c.logo || imgClienteDef}" class="bubble-img"><div class="bubble-name">${c.nombre}</div></div>`); }
         document.getElementById('formCliente').addEventListener('submit', function(e) { e.preventDefault(); const file = document.getElementById('c_logo_file').files[0]; const enviar = (logoB64) => { fetch('/api/clientes', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ nombre: document.getElementById('c_nombre').value, nif: document.getElementById('c_nif').value, direccion: document.getElementById('c_direccion').value, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, logo: logoB64 }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); document.getElementById('formCliente').reset(); cerrarModal('modalCrearCliente'); cargarClientes(); }); }; if(file) { comprimirImagen(file, enviar); } else { enviar(''); } });
         function abrirDetalleCliente(id) { const c = clientesGlobal.find(x => x.id === id); document.getElementById('d_c_logo').src = c.logo || imgClienteDef; document.getElementById('d_c_nombre').innerText = c.nombre; document.getElementById('d_c_nif').innerText = c.nif; document.getElementById('d_c_direccion').innerText = c.direccion; document.getElementById('d_c_tel').innerText = c.telefono || '-'; document.getElementById('d_c_email').innerText = c.email || '-'; const ots = otsGlobal.filter(ot => ot.cliente_id === id); const divOts = document.getElementById('d_c_ots'); divOts.innerHTML = ''; if(ots.length === 0) divOts.innerHTML = '<p>No hay OTs para este cliente.</p>'; ots.forEach(ot => { let color = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'PENDIENTE' ? '#f39c12' : '#e74c3c'); divOts.innerHTML += `<div style="border-left: 4px solid ${color}; padding: 10px; background: #fff; margin-bottom: 8px;"><strong>${ot.codigo_ot}</strong> - ${ot.marca} <span style="float:right; color:${color};">${ot.estado}</span></div>`; }); cerrarModal('modalClientes'); abrirModal('modalDetalleCliente'); }
@@ -495,39 +527,29 @@
 
         document.getElementById('formOT').addEventListener('submit', function(e) { e.preventDefault(); if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; } const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value; if (!validarFormulario(codigo, fechaEn, fechaCo)) return; const datos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('materiales_precio').value), cliente_id: document.getElementById('ot_cliente_id').value || null }; fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); cargarOTs(); }}); });
 
-        // FACTURAS Y PDF
+        // FACTURAS
         function abrirGeneradorFactura(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot; document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura(); lineasFactura = [{ concepto: "Desplazamiento", cantidad: 1, precio: 40.00 }, { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }]; renderizarTablaFactura(); abrirModal('modalFactura'); }
         function actualizarInfoClienteFactura() { const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto'); if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; } const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`; }
         function renderizarTablaFactura() { const tbody = document.getElementById('tbodyLineas'); tbody.innerHTML = ''; let baseImponible = 0; lineasFactura.forEach((l, idx) => { const t = l.cantidad * l.precio; baseImponible += t; tbody.innerHTML += `<tr><td><input type="text" value="${l.concepto}" onchange="actualizarLinea(${idx}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${l.cantidad}" onchange="actualizarLinea(${idx}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${l.precio}" onchange="actualizarLinea(${idx}, 'precio', this.value)"></td><td style="text-align:right;">${t.toFixed(2)} €</td><td class="no-print"><button class="btn-peligro" onclick="borrarLineaFactura(${idx})">🗑️</button></td></tr>`; }); const iva = baseImponible * 0.21; document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2); }
         function actualizarLinea(i, c, v) { lineasFactura[i][c] = c === 'concepto' ? v : (parseFloat(v) || 0); renderizarTablaFactura(); }
         function agregarLineaBlanco() { lineasFactura.push({ concepto: "", cantidad: 1, precio: 0.00 }); renderizarTablaFactura(); }
         function borrarLineaFactura(i) { lineasFactura.splice(i, 1); renderizarTablaFactura(); }
-
+        
         function enviarFacturaAlCliente() {
             const idCliente = document.getElementById('selClienteFactura').value;
             if (!idCliente) { alert("❌ Selecciona un cliente primero."); return; }
             const cliente = clientesGlobal.find(c => c.id == idCliente);
             if (!cliente.email || !cliente.email.includes("@")) { alert("❌ El cliente no tiene un email válido."); return; }
             if(!confirm(`¿Enviar PDF a ${cliente.email}?`)) return;
-
             alert("⏳ Generando PDF y enviando... esto tomará unos segundos.");
-            const areaFactura = document.getElementById('facturaAreaImpresion');
-            areaFactura.classList.add('factura-pdf-limpia');
+            const areaFactura = document.getElementById('facturaAreaImpresion'); areaFactura.classList.add('factura-pdf-limpia');
             const noPrints = document.querySelectorAll('.no-print'); noPrints.forEach(el => el.style.display = 'none');
             document.getElementById('printClienteNombre').style.display = 'block';
-
             const opciones = { margin: 10, filename: `Factura_${otActualCodigo.replace('/', '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-
             html2pdf().set(opciones).from(areaFactura).outputPdf('datauristring').then(function(pdfDataUrl) {
-                areaFactura.classList.remove('factura-pdf-limpia');
-                noPrints.forEach(el => el.style.display = '');
-                document.getElementById('printClienteNombre').style.display = 'none';
-
+                areaFactura.classList.remove('factura-pdf-limpia'); noPrints.forEach(el => el.style.display = ''); document.getElementById('printClienteNombre').style.display = 'none';
                 const base64Puro = pdfDataUrl.split(',')[1];
-                fetch('/api/enviar-factura', {
-                    method: 'POST', headers: headersSeguridad,
-                    body: JSON.stringify({ emailDestino: cliente.email, asunto: `Factura ${otActualCodigo} - ServiPlusUltra`, htmlBody: `<div style="font-family: Arial; padding: 20px;"><h2>Hola, ${cliente.nombre}</h2><p>Adjuntamos la factura de la OT <strong>${otActualCodigo}</strong>.</p></div>`, pdfBase64: base64Puro, nombreArchivo: `Factura_${otActualCodigo.replace('/', '-')}.pdf` })
-                }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); });
+                fetch('/api/enviar-factura', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ emailDestino: cliente.email, asunto: `Factura ${otActualCodigo} - ServiPlusUltra`, htmlBody: `<div style="font-family: Arial; padding: 20px;"><h2>Hola, ${cliente.nombre}</h2><p>Adjuntamos la factura de la OT <strong>${otActualCodigo}</strong>.</p></div>`, pdfBase64: base64Puro, nombreArchivo: `Factura_${otActualCodigo.replace('/', '-')}.pdf` }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); });
             });
         }
 
