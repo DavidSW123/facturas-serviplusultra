@@ -94,13 +94,13 @@
         .deuda-linea { font-size: 1.2em; font-weight: bold; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; display: inline-block; width: 100%; box-sizing: border-box; }
         .deuda-linea span.pagador { color: #e74c3c; }
         .deuda-linea span.receptor { color: #27ae60; }
-        .gasto-item { display: flex; justify-content: space-between; background: #fff; padding: 10px; border-bottom: 1px solid #eee; align-items: center; }
+        .gasto-item { display: flex; justify-content: space-between; background: #fff; padding: 10px; border-bottom: 1px solid #eee; align-items: center; border-left: 4px solid #1abc9c; margin-bottom:5px; border-radius:4px;}
+        .gasto-item.pago-directo { border-left-color: #3498db; }
         .gasto-item:last-child { border-bottom: none; }
         .bal-positivo { color: #27ae60; font-weight: bold; }
         .bal-negativo { color: #e74c3c; font-weight: bold; }
         .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
         .checkbox-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; }
-        
         .linea-desglose { padding: 8px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.95em; }
         .linea-desglose:last-child { border-bottom: none; }
 
@@ -211,48 +211,58 @@
     </div>
 
     <div id="modalGastos" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content" style="max-width: 700px; background-color: #fcfcfc;">
             <span class="close-modal" onclick="cerrarModal('modalGastos')">&times;</span>
             <h2 style="margin-top:0;">💸 Cuentas Claras (Socios)</h2>
-            <p style="color:#7f8c8d; text-align: center; margin-top: -10px;">Añade los gastos y el sistema calculará los saldos. Haz clic en tu nombre abajo para ver el desglose.</p>
+            <p style="color:#7f8c8d; text-align: center; margin-top: -10px;">Haz clic en tu nombre abajo para ver tu desglose de cuentas.</p>
 
-            <div style="background: #f8f9fa; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0; color: #34495e;">Añadir nuevo gasto</h4>
-                <form id="formGastoSocio">
-                    <div class="grid-2">
+            <div style="background: #fff; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                
+                <div style="display:flex; border-bottom: 2px solid #ddd; margin-bottom: 15px;">
+                    <div id="tabGasto" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #1abc9c; font-weight:bold; color:#1abc9c;" onclick="cambiarTabGastos('gasto')">🛒 Gasto de Empresa</div>
+                    <div id="tabPago" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;" onclick="cambiarTabGastos('pago')">💸 Liquidar Deuda</div>
+                </div>
+
+                <div id="panelGasto">
+                    <form id="formGastoSocio">
+                        <div class="grid-2">
+                            <div class="form-group"><label>¿Quién lo pagó?</label><select id="g_pagador" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div>
+                            <div class="form-group"><label>Importe (€)</label><input type="number" step="0.01" id="g_importe" placeholder="Ej: 50.00" required></div>
+                        </div>
+                        <div class="form-group"><label>Concepto (Material, Cena...)</label><input type="text" id="g_concepto" placeholder="Ej: Comida, Herramientas..." required></div>
                         <div class="form-group">
-                            <label>¿Quién lo ha pagado?</label>
-                            <select id="g_pagador" required>
-                                <option value="Giancarlo">Giancarlo</option>
-                                <option value="David">David</option>
-                                <option value="Kevin">Kevin</option>
-                            </select>
+                            <label>¿Entre quiénes se reparte este gasto?</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="chk_implicados" value="Giancarlo" checked> Giancarlo</label>
+                                <label><input type="checkbox" name="chk_implicados" value="David" checked> David</label>
+                                <label><input type="checkbox" name="chk_implicados" value="Kevin" checked> Kevin</label>
+                            </div>
                         </div>
-                        <div class="form-group"><label>Importe Total (€)</label><input type="number" step="0.01" id="g_importe" placeholder="Ej: 50.00" required></div>
-                    </div>
-                    <div class="form-group"><label>Concepto</label><input type="text" id="g_concepto" placeholder="Ej: Comida, Herramientas..." required></div>
-                    
-                    <div class="form-group">
-                        <label>¿Entre quiénes se reparte este gasto?</label>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" name="chk_implicados" value="Giancarlo" checked> Giancarlo</label>
-                            <label><input type="checkbox" name="chk_implicados" value="David" checked> David</label>
-                            <label><input type="checkbox" name="chk_implicados" value="Kevin" checked> Kevin</label>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn-save" style="margin-top: 0; padding: 10px;">Añadir Gasto Repartido</button>
+                    </form>
+                </div>
 
-                    <button type="submit" class="btn-save" style="margin-top: 0; padding: 10px;">Añadir Gasto</button>
-                </form>
+                <div id="panelPago" style="display:none;">
+                    <form id="formPagoSocio">
+                        <div class="grid-2">
+                            <div class="form-group"><label>¿Quién envía el dinero?</label><select id="p_emisor" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div>
+                            <div class="form-group"><label>¿A quién se lo envía?</label><select id="p_receptor" required><option value="Kevin">Kevin</option><option value="Giancarlo">Giancarlo</option><option value="David">David</option></select></div>
+                        </div>
+                        <div class="form-group"><label>Importe enviado (€)</label><input type="number" step="0.01" id="p_importe" placeholder="Ej: 35.00" required></div>
+                        <button type="submit" class="btn-save" style="margin-top: 0; padding: 10px; background-color: #3498db;">Registrar Pago / Liquidación</button>
+                    </form>
+                </div>
+
             </div>
 
             <div class="caja-deudas">
-                <h3>⚖️ Ajuste de Cuentas (Deudas)</h3>
+                <h3>⚖️ Ajuste de Cuentas (Deudas Finales)</h3>
                 <div id="resumenDeudas">Cargando cuentas...</div>
                 <div style="margin-top: 15px; font-size: 0.9em; color: #7f8c8d; display: flex; justify-content: space-around; border-top: 1px solid #ccc; padding-top: 10px;" id="resumenBalances"></div>
             </div>
 
-            <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px;">📜 Historial de Gastos</h3>
-            <div id="listaHistorialGastos" style="max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; border: 1px solid #eee;"></div>
+            <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px;">📜 Historial de Movimientos</h3>
+            <div id="listaHistorialGastos" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius: 8px; border: 1px solid #eee;"></div>
         </div>
     </div>
 
@@ -307,6 +317,7 @@
                 
                 if(['Giancarlo', 'David', 'Kevin'].includes(sesion.username)) {
                     document.getElementById('g_pagador').value = sesion.username;
+                    document.getElementById('p_emisor').value = sesion.username;
                 }
             }
             if (sesion.rol === 'admin') document.getElementById('menuSolicitudesArea').innerHTML = `<button class="btn-side" style="background: #e67e22;" onclick="abrirSolicitudesClientes()">🔔 Solicitudes Nuevos Clientes</button>`;
@@ -314,7 +325,22 @@
             cargarUsuariosParaOT();
         }
 
-        // --- ALGORITMO MAGICO: SPLITWISE CON REPARTO CUSTOM Y DESGLOSE ---
+        // --- LÓGICA DE PESTAÑAS (GASTO VS PAGO) ---
+        function cambiarTabGastos(tipo) {
+            if(tipo === 'gasto') {
+                document.getElementById('tabGasto').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #1abc9c; font-weight:bold; color:#1abc9c;";
+                document.getElementById('tabPago').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;";
+                document.getElementById('panelGasto').style.display = 'block';
+                document.getElementById('panelPago').style.display = 'none';
+            } else {
+                document.getElementById('tabPago').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #3498db; font-weight:bold; color:#3498db;";
+                document.getElementById('tabGasto').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;";
+                document.getElementById('panelPago').style.display = 'block';
+                document.getElementById('panelGasto').style.display = 'none';
+            }
+        }
+
+        // --- ALGORITMO MAGICO: SPLITWISE ---
         function abrirGastosSocios() {
             fetch('/api/gastos', { headers: headersSeguridad }).then(res => res.json()).then(gastos => {
                 renderizarDeudas(gastos);
@@ -322,19 +348,39 @@
                 const divHistorial = document.getElementById('listaHistorialGastos');
                 divHistorial.innerHTML = '';
                 if(gastos.length === 0) divHistorial.innerHTML = '<p style="text-align:center; padding: 10px; color:#aaa;">No hay gastos registrados aún.</p>';
+                
                 gastos.forEach(g => {
-                    let imp = g.implicados ? g.implicados.split(',').join(', ') : 'Todos';
-                    divHistorial.innerHTML += `
-                        <div class="gasto-item">
-                            <div>
-                                <strong>${g.concepto}</strong> <br> 
-                                <small style="color:#7f8c8d;">Paga: ${g.pagador} | Reparten: ${imp} | ${g.fecha}</small>
-                            </div>
-                            <div style="text-align: right;">
-                                <strong>${g.importe.toFixed(2)} €</strong><br>
-                                <button class="btn-peligro" style="padding: 2px 5px; font-size: 0.8em; margin-top: 5px;" onclick="borrarGastoSocio(${g.id})">Borrar</button>
-                            </div>
-                        </div>`;
+                    const esPago = g.concepto.startsWith('[PAGO]');
+                    
+                    if (esPago) {
+                        // Renderizado visual para un pago directo (Bizum)
+                        let receptor = g.implicados || 'Alguien';
+                        divHistorial.innerHTML += `
+                            <div class="gasto-item pago-directo">
+                                <div>
+                                    <strong>💸 Ajuste de Saldo</strong> <br> 
+                                    <small style="color:#7f8c8d;">${g.pagador} ➡️ ${receptor} | ${g.fecha}</small>
+                                </div>
+                                <div style="text-align: right;">
+                                    <strong>${g.importe.toFixed(2)} €</strong><br>
+                                    <button class="btn-peligro" style="padding: 2px 5px; font-size: 0.8em; margin-top: 5px;" onclick="borrarGastoSocio(${g.id})">Borrar</button>
+                                </div>
+                            </div>`;
+                    } else {
+                        // Renderizado visual normal para un gasto de materiales/comida
+                        let imp = g.implicados ? g.implicados.split(',').join(', ') : 'Todos';
+                        divHistorial.innerHTML += `
+                            <div class="gasto-item">
+                                <div>
+                                    <strong>🛒 ${g.concepto}</strong> <br> 
+                                    <small style="color:#7f8c8d;">Pagó: ${g.pagador} | Para: ${imp} | ${g.fecha}</small>
+                                </div>
+                                <div style="text-align: right;">
+                                    <strong>${g.importe.toFixed(2)} €</strong><br>
+                                    <button class="btn-peligro" style="padding: 2px 5px; font-size: 0.8em; margin-top: 5px;" onclick="borrarGastoSocio(${g.id})">Borrar</button>
+                                </div>
+                            </div>`;
+                    }
                 });
                 abrirModal('modalGastos');
             });
@@ -343,41 +389,45 @@
         function renderizarDeudas(gastos) {
             const socios = ['Giancarlo', 'David', 'Kevin'];
             let balances = { Giancarlo: 0, David: 0, Kevin: 0 };
-            
-            // Creamos un diccionario para guardar el desglose de cada socio
             let desglose = { Giancarlo: [], David: [], Kevin: [] };
 
-            // 1. Recorrer cada ticket y calcular quién suma y quién resta
             gastos.forEach(g => {
                 const pagador = g.pagador;
                 const importe = parseFloat(g.importe);
+                const esPago = g.concepto.startsWith('[PAGO]');
                 
-                // Si son gastos antiguos que no tenían la columna, asumimos que son los 3
                 const implicadosStr = g.implicados || 'Giancarlo,David,Kevin';
                 const implicados = implicadosStr.split(',');
                 
-                // La parte que le toca a cada uno de los marcados en ese gasto
-                const cuota = importe / implicados.length;
+                if (esPago) {
+                    // Lógica para Pagos Directos (Liquidaciones)
+                    const receptor = implicados[0];
+                    if (balances[pagador] !== undefined) balances[pagador] += importe;
+                    if (balances[receptor] !== undefined) balances[receptor] -= importe;
 
-                // El que paga suma puntos a su favor
-                if (balances[pagador] !== undefined) {
-                    balances[pagador] += importe;
-                    desglose[pagador].push(`<div class="linea-desglose"><span style="color:#27ae60">➕ Pagaste ${importe.toFixed(2)}€</span> por: ${g.concepto}</div>`);
-                }
-
-                // A los implicados se les resta su parte correspondiente
-                implicados.forEach(imp => {
-                    let impName = imp.trim();
-                    if (balances[impName] !== undefined) {
-                        balances[impName] -= cuota;
-                        if (impName !== pagador) {
-                            desglose[impName].push(`<div class="linea-desglose"><span style="color:#e74c3c">➖ Tu parte consumida (-${cuota.toFixed(2)}€)</span> de: ${g.concepto} (Lo pagó ${pagador})</div>`);
-                        } else {
-                            // Si él mismo lo pagó y está implicado, se lo restamos como consumo propio
-                            desglose[impName].push(`<div class="linea-desglose"><span style="color:#7f8c8d">➖ Tu propio consumo (-${cuota.toFixed(2)}€)</span> en: ${g.concepto}</div>`);
-                        }
+                    if (desglose[pagador]) desglose[pagador].push(`<div class="linea-desglose"><span style="color:#27ae60">💸 Enviaste ${importe.toFixed(2)}€</span> a ${receptor} para liquidar deudas.</div>`);
+                    if (desglose[receptor]) desglose[receptor].push(`<div class="linea-desglose"><span style="color:#e74c3c">📥 Recibiste ${importe.toFixed(2)}€</span> de ${pagador}.</div>`);
+                } else {
+                    // Lógica para Gastos Normales
+                    const cuota = importe / implicados.length;
+                    
+                    if (balances[pagador] !== undefined) {
+                        balances[pagador] += importe;
+                        desglose[pagador].push(`<div class="linea-desglose"><span style="color:#27ae60">🛒 Pagaste ${importe.toFixed(2)}€</span> por: ${g.concepto}</div>`);
                     }
-                });
+
+                    implicados.forEach(imp => {
+                        let impName = imp.trim();
+                        if (balances[impName] !== undefined) {
+                            balances[impName] -= cuota;
+                            if (impName !== pagador) {
+                                desglose[impName].push(`<div class="linea-desglose"><span style="color:#e74c3c">➖ Consumo (-${cuota.toFixed(2)}€)</span> en: ${g.concepto} (pagado por ${pagador})</div>`);
+                            } else {
+                                desglose[impName].push(`<div class="linea-desglose"><span style="color:#7f8c8d">➖ Tu consumo (-${cuota.toFixed(2)}€)</span> en tu propia compra de: ${g.concepto}</div>`);
+                            }
+                        }
+                    });
+                }
             });
 
             // 2. Separar Deudores y Acreedores
@@ -398,7 +448,7 @@
                 let acreedor = acreedores[j];
                 let cantidadCruzada = Math.min(deudor.cantidad, acreedor.cantidad);
                 
-                transferencias.push(`<div class="deuda-linea"><span class="pagador">${deudor.nombre}</span> debe transferir a <span class="receptor">${acreedor.nombre}</span>: <strong>${cantidadCruzada.toFixed(2)} €</strong></div>`);
+                transferencias.push(`<div class="deuda-linea"><span class="pagador">${deudor.nombre}</span> debe enviar a <span class="receptor">${acreedor.nombre}</span>: <strong>${cantidadCruzada.toFixed(2)} €</strong></div>`);
                 
                 deudor.cantidad -= cantidadCruzada;
                 acreedor.cantidad -= cantidadCruzada;
@@ -415,19 +465,18 @@
                 divResumen.innerHTML = transferencias.join('');
             }
 
-            // Pintamos las tarjetas interactivas de abajo
+            // Pintamos las tarjetas interactivas
             let htmlBalances = '';
             socios.forEach(s => {
                 let netoInfo = balances[s];
                 let colorNeto = netoInfo >= 0 ? 'bal-positivo' : 'bal-negativo';
                 let signo = netoInfo > 0 ? '+' : '';
                 
-                // Preparamos el HTML del desglose para mandarlo a la función del popup
                 let desgloseJSON = encodeURIComponent(JSON.stringify(desglose[s]));
                 
                 htmlBalances += `
                 <div style="cursor:pointer; padding:10px; border-radius:8px; transition:0.2s; border: 1px solid transparent;" 
-                     onmouseover="this.style.background='#fff'; this.style.borderColor='#1abc9c';" 
+                     onmouseover="this.style.background='#f0f4f8'; this.style.borderColor='#1abc9c';" 
                      onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';" 
                      onclick="mostrarDesglose('${s}', '${desgloseJSON}', ${netoInfo})">
                     <strong>${s}</strong><br>
@@ -438,60 +487,68 @@
             document.getElementById('resumenBalances').innerHTML = htmlBalances;
         }
 
-        // --- FUNCIÓN PARA EL POPUP DE DETALLES ---
+        // --- POPUP DE DETALLES ---
         function mostrarDesglose(nombre, desgloseJSON, netoInfo) {
             document.getElementById('desgloseNombre').innerText = nombre;
-            
             let colorNeto = netoInfo >= 0 ? 'green' : 'red';
             let signo = netoInfo > 0 ? '+' : '';
             document.getElementById('desgloseTotal').innerHTML = `<span style="color:${colorNeto}">${signo}${netoInfo.toFixed(2)} €</span>`;
             
             let operaciones = JSON.parse(decodeURIComponent(desgloseJSON));
-            let htmlOperaciones = operaciones.length > 0 ? operaciones.join('') : '<p style="padding:10px; text-align:center;">No has participado en ningún gasto aún.</p>';
+            let htmlOperaciones = operaciones.length > 0 ? operaciones.join('') : '<p style="padding:10px; text-align:center;">Aún no hay movimientos.</p>';
             
             document.getElementById('desgloseOperaciones').innerHTML = htmlOperaciones;
             abrirModal('modalDesgloseSplitwise');
         }
 
+        // --- ENVIAR GASTO DE EMPRESA ---
         document.getElementById('formGastoSocio').addEventListener('submit', function(e) {
             e.preventDefault();
             const pagador = document.getElementById('g_pagador').value;
             const importe = document.getElementById('g_importe').value;
             const concepto = document.getElementById('g_concepto').value;
             
-            // Recoger los implicados marcados
             const checkboxes = document.querySelectorAll('input[name="chk_implicados"]:checked');
             const implicados = Array.from(checkboxes).map(c => c.value);
             
-            if(implicados.length === 0) {
-                alert("❌ Debes marcar al menos a 1 persona en '¿Entre quiénes se reparte?'.");
-                return;
-            }
+            if(implicados.length === 0) { alert("❌ Marca al menos a 1 persona en el reparto."); return; }
 
             fetch('/api/gastos', {
-                method: 'POST',
-                headers: headersSeguridad,
-                body: JSON.stringify({ pagador, importe, concepto, implicados })
+                method: 'POST', headers: headersSeguridad, body: JSON.stringify({ pagador, importe, concepto, implicados })
             }).then(r => r.json()).then(data => {
                 if(data.error) alert("❌ " + data.error);
                 else {
                     document.getElementById('g_importe').value = '';
                     document.getElementById('g_concepto').value = '';
-                    // Reseteamos los checks
                     document.querySelectorAll('input[name="chk_implicados"]').forEach(c => c.checked = true);
                     abrirGastosSocios();
                 }
             });
         });
 
-        function borrarGastoSocio(id) {
-            if(confirm("¿Seguro que quieres borrar este gasto? Las cuentas se recalcularán.")) {
-                fetch(`/api/gastos/${id}`, { method: 'DELETE', headers: headersSeguridad })
-                .then(r => r.json()).then(data => { abrirGastosSocios(); });
-            }
-        }
+        // --- ENVIAR PAGO (LIQUIDACIÓN BIZUM) ---
+        document.getElementById('formPagoSocio').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const emisor = document.getElementById('p_emisor').value;
+            const receptor = document.getElementById('p_receptor').value;
+            const importe = document.getElementById('p_importe').value;
 
-        // UTILIDADES VARIAS Y FACTURACIÓN (Se mantiene el código sin cambios)
+            if(emisor === receptor) { alert("❌ El que paga y el que recibe no pueden ser el mismo."); return; }
+
+            fetch('/api/gastos', {
+                method: 'POST', headers: headersSeguridad, body: JSON.stringify({ pagador: emisor, importe: importe, concepto: '[PAGO] Liquidación de deuda', implicados: [receptor] })
+            }).then(r => r.json()).then(data => {
+                if(data.error) alert("❌ " + data.error);
+                else {
+                    document.getElementById('p_importe').value = '';
+                    abrirGastosSocios();
+                }
+            });
+        });
+
+        function borrarGastoSocio(id) { if(confirm("¿Borrar este movimiento?")) { fetch(`/api/gastos/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(r => r.json()).then(data => { abrirGastosSocios(); }); } }
+
+        // UTILIDADES Y FACTURACIÓN (Se mantiene el código...)
         function comprimirImagen(file, callback) { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); callback(canvas.toDataURL('image/jpeg', 0.6)); }; }; }
         function probarEnvioCorreo() { const email = prompt("Introduce tu correo para la prueba:"); if (!email) return; alert("⏳ Enviando..."); fetch('/api/test-email', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ emailDestino: email }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); }).catch(e => alert("❌ Error.")); }
 
@@ -527,7 +584,6 @@
 
         document.getElementById('formOT').addEventListener('submit', function(e) { e.preventDefault(); if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; } const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value; if (!validarFormulario(codigo, fechaEn, fechaCo)) return; const datos = { codigo_ot: codigo, fecha_encargo: fechaEn, fecha_completada: fechaCo, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('materiales_precio').value), cliente_id: document.getElementById('ot_cliente_id').value || null }; fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); cargarOTs(); }}); });
 
-        // FACTURAS
         function abrirGeneradorFactura(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot; document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura(); lineasFactura = [{ concepto: "Desplazamiento", cantidad: 1, precio: 40.00 }, { concepto: `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`, cantidad: ot.horas * ot.num_tecnicos, precio: 25.00 }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }]; renderizarTablaFactura(); abrirModal('modalFactura'); }
         function actualizarInfoClienteFactura() { const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto'); if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; } const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`; }
         function renderizarTablaFactura() { const tbody = document.getElementById('tbodyLineas'); tbody.innerHTML = ''; let baseImponible = 0; lineasFactura.forEach((l, idx) => { const t = l.cantidad * l.precio; baseImponible += t; tbody.innerHTML += `<tr><td><input type="text" value="${l.concepto}" onchange="actualizarLinea(${idx}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${l.cantidad}" onchange="actualizarLinea(${idx}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${l.precio}" onchange="actualizarLinea(${idx}, 'precio', this.value)"></td><td style="text-align:right;">${t.toFixed(2)} €</td><td class="no-print"><button class="btn-peligro" onclick="borrarLineaFactura(${idx})">🗑️</button></td></tr>`; }); const iva = baseImponible * 0.21; document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2); }
