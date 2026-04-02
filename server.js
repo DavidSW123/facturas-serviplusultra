@@ -90,7 +90,7 @@ app.post('/api/ot/:id/adjuntos', async (req, res) => { const ot_id = req.params.
 app.post('/api/ot/:id/lineas_materiales', async (req, res) => { const ot_id = req.params.id; const lineas = req.body.lineas_materiales; let totalSuma = 0; const fMat = new Date().toLocaleString('es-ES'); try { for (let mat of lineas) { let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`; await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, mat.imagen || '', mat.importe, textoDesc, fMat] }); if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); } totalSuma += mat.importe; } if (totalSuma > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [totalSuma, ot_id] }); } res.json({ mensaje: 'Nuevas líneas añadidas.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.delete('/api/ot/adjuntos/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Admin.' }); const { id } = req.params; try { const r = await db.execute({ sql: `SELECT ot_id, importe FROM ot_adjuntos WHERE id = ?`, args: [id] }); if (r.rows.length > 0) { const { ot_id, importe } = r.rows[0]; await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE id = ?`, args: [id] }); await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio - ? WHERE id = ?`, args: [importe, ot_id] }); res.json({ mensaje: 'Línea/Ticket eliminado.' }); } else { res.status(404).json({ error: 'No encontrado' }); } } catch(e) { res.status(500).json({ error: e.message }); } });
 
-// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA (MÉTODO DIRECTO Y BLINDADO) 🔴
+// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA (ACTUALIZADO A GEMINI 2.5) 🔴
 app.post('/api/ia/escanear-ticket', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'Falta GEMINI_API_KEY en .env de Render' });
@@ -103,8 +103,8 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
         const b64Limpio = imagenBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        // Conexión DIRECTA a Google (Nos saltamos las librerías)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // Conexión DIRECTA a Google usando el modelo moderno (Gemini 2.5 Flash)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const prompt = `Actúa como un contable experto. Analiza la imagen de este ticket o factura. 
         Extrae cada producto o recambio comprado. 
@@ -114,7 +114,7 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
         - Si no encuentras la cantidad, pon 1.
         - El 'precio' debe ser el precio TOTAL de esa línea (cantidad * precio unitario).`;
 
-        // Paquete de datos nativo para Gemini 1.5
+        // Paquete de datos nativo para Gemini 2.5
         const payload = {
             contents: [{
                 parts: [
@@ -141,8 +141,10 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
             return res.status(500).json({ error: `Google rechazó la imagen: ${data.error?.message || 'Error desconocido'}` });
         }
 
-        // Leer la respuesta de la IA
-        const textoFinal = data.candidates[0].content.parts[0].text;
+        // Leer la respuesta de la IA y limpiarla por si acaso
+        let textoFinal = data.candidates[0].content.parts[0].text;
+        textoFinal = textoFinal.replace(/```json/gi, '').replace(/```/g, '').trim();
+        
         const jsonLineas = JSON.parse(textoFinal);
         
         res.json({ lineas: jsonLineas });
