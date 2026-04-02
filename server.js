@@ -75,7 +75,7 @@ app.post('/api/ot/:id/adjuntos', async (req, res) => { const ot_id = req.params.
 app.post('/api/ot/:id/lineas_materiales', async (req, res) => { const ot_id = req.params.id; const lineas = req.body.lineas_materiales; let totalSuma = 0; const fMat = new Date().toLocaleString('es-ES'); try { for (let mat of lineas) { let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`; await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, mat.imagen || '', mat.importe, textoDesc, fMat] }); if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); } totalSuma += mat.importe; } if (totalSuma > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [totalSuma, ot_id] }); } res.json({ mensaje: 'Nuevas líneas añadidas.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.delete('/api/ot/adjuntos/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Admin.' }); const { id } = req.params; try { const r = await db.execute({ sql: `SELECT ot_id, importe FROM ot_adjuntos WHERE id = ?`, args: [id] }); if (r.rows.length > 0) { const { ot_id, importe } = r.rows[0]; await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE id = ?`, args: [id] }); await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio - ? WHERE id = ?`, args: [importe, ot_id] }); res.json({ mensaje: 'Línea/Ticket eliminado.' }); } else { res.status(404).json({ error: 'No encontrado' }); } } catch(e) { res.status(500).json({ error: e.message }); } });
 
-// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA (CON EL NOMBRE DEL MODELO CORREGIDO) 🔴
+// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA (CON PLAN B AUTOMÁTICO) 🔴
 app.post('/api/ia/escanear-ticket', async (req, res) => {
     if (!genAI) return res.status(500).json({ error: 'El motor de IA no está configurado (Falta GEMINI_API_KEY en .env)' });
     
@@ -87,8 +87,8 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
         const b64Limpio = imagenBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        // 🔴 AQUÍ ESTÁ LA MAGIA: Le añadimos "-latest" para que Google no se pierda
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        // 🔴 AHORA USAMOS GEMINI PRO (Más potente y universal)
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
         
         const prompt = `Actúa como un contable experto. Analiza la imagen de este ticket o factura. 
         Extrae cada producto o recambio comprado. 
@@ -97,7 +97,7 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
         Reglas estrictas:
         - Si no encuentras la cantidad, pon 1.
         - El 'precio' debe ser el precio TOTAL de esa línea (cantidad * precio unitario).
-        - NO escribas la palabra \`\`\`json.
+        - NO escribas la palabra \`\`\`json ni uses markdown.
         - NO añadas ningún texto de saludo ni despedida, SOLO el array [ ... ].`;
 
         const imageParts = [{ inlineData: { data: b64Limpio, mimeType: mimeType } }];
@@ -106,14 +106,26 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
         const response = await result.response;
         let textoFinal = response.text();
         
-        // Limpieza extra por si la IA añade comillas raras
+        // Limpieza extra
         textoFinal = textoFinal.replace(/```json/gi, '').replace(/```/g, '').trim();
         
         const jsonLineas = JSON.parse(textoFinal);
         res.json({ lineas: jsonLineas });
     } catch (error) {
-        console.error("Detalle interno del error de IA:", error);
-        res.status(500).json({ error: `Google IA dice: ${error.message}` });
+        console.error("Fallo con Gemini Pro, intentando Fallback:", error.message);
+        
+        try {
+            // PLAN C: Modelo de visión clásico (por si tu cuenta aún no tiene los 1.5)
+            const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+            const fallbackResult = await fallbackModel.generateContent([
+                "Extrae los productos de esta imagen y devuelve SOLO un array JSON así: [{\"descripcion\": \"item\", \"cantidad\": 1, \"precio\": 10.0}]. Ningún otro texto.", 
+                { inlineData: { data: req.body.imagenBase64.replace(/^data:image\/\w+;base64,/, ""), mimeType: "image/jpeg" } }
+            ]);
+            let fallbackTexto = fallbackResult.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
+            res.json({ lineas: JSON.parse(fallbackTexto) });
+        } catch (fallbackError) {
+            res.status(500).json({ error: `Google IA bloqueado: ${error.message}` });
+        }
     }
 });
 
