@@ -90,31 +90,36 @@ app.post('/api/ot/:id/adjuntos', async (req, res) => { const ot_id = req.params.
 app.post('/api/ot/:id/lineas_materiales', async (req, res) => { const ot_id = req.params.id; const lineas = req.body.lineas_materiales; let totalSuma = 0; const fMat = new Date().toLocaleString('es-ES'); try { for (let mat of lineas) { let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`; await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, mat.imagen || '', mat.importe, textoDesc, fMat] }); if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); } totalSuma += mat.importe; } if (totalSuma > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [totalSuma, ot_id] }); } res.json({ mensaje: 'Nuevas líneas añadidas.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.delete('/api/ot/adjuntos/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Admin.' }); const { id } = req.params; try { const r = await db.execute({ sql: `SELECT ot_id, importe FROM ot_adjuntos WHERE id = ?`, args: [id] }); if (r.rows.length > 0) { const { ot_id, importe } = r.rows[0]; await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE id = ?`, args: [id] }); await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio - ? WHERE id = ?`, args: [importe, ot_id] }); res.json({ mensaje: 'Línea/Ticket eliminado.' }); } else { res.status(404).json({ error: 'No encontrado' }); } } catch(e) { res.status(500).json({ error: e.message }); } });
 
-// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA (ACTUALIZADO A GEMINI 2.5) 🔴
+// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA (OPTIMIZADO PARA BASE IMPONIBLE) 🔴
 app.post('/api/ia/escanear-ticket', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'Falta GEMINI_API_KEY en .env de Render' });
+    if (!apiKey) return res.status(500).json({ error: 'Falta GEMINI_API_KEY en Render' });
     
     try {
         const { imagenBase64 } = req.body;
-        
-        // Detectar formato
         const mimeTypeMatch = imagenBase64.match(/^data:(image\/\w+);base64,/);
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
         const b64Limpio = imagenBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        // Conexión DIRECTA a Google usando el modelo moderno (Gemini 2.5 Flash)
+        // Seguimos con Gemini 2.5 Flash
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-        const prompt = `Actúa como un contable experto. Analiza la imagen de este ticket o factura. 
-        Extrae cada producto o recambio comprado. 
-        Devuelve ÚNICAMENTE un array en formato JSON con esta estructura exacta para cada línea:
+        // Ajustamos el prompt para que sea un contable estricto
+        const prompt = `Actúa como un contable experto español. Analiza este ticket o factura.
+        Necesito que extraigas cada producto comprado pero SIN EL IVA.
+        
+        INSTRUCCIONES CLAVE:
+        1. Para cada línea, localiza el importe total de ese producto.
+        2. Descuenta el IVA correspondiente (normalmente 21%, 10% o 4%) para obtener la BASE IMPONIBLE.
+        3. Si el ticket ya muestra la base imponible por separado, úsala directamente.
+        4. Devuelve ÚNICAMENTE un array en formato JSON con esta estructura:
         [{"descripcion": "nombre del producto", "cantidad": 1, "precio": 10.50}]
-        Reglas estrictas:
-        - Si no encuentras la cantidad, pon 1.
-        - El 'precio' debe ser el precio TOTAL de esa línea (cantidad * precio unitario).`;
+        
+        REGLAS DE ORO:
+        - El campo 'precio' debe ser SIEMPRE la BASE IMPONIBLE TOTAL de la línea (Cantidad x Precio Unitario sin IVA).
+        - No incluyas descuentos ni el total final del ticket como un producto.
+        - Responde SOLO con el JSON crudo, sin bloques de código ni texto adicional.`;
 
-        // Paquete de datos nativo para Gemini 2.5
         const payload = {
             contents: [{
                 parts: [
@@ -122,11 +127,9 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
                     { inlineData: { mimeType: mimeType, data: b64Limpio } }
                 ]
             }],
-            // Forzamos a la IA a responder en JSON matemático puro
             generationConfig: { responseMimeType: "application/json" }
         };
 
-        // Disparo de la petición
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -135,23 +138,19 @@ app.post('/api/ia/escanear-ticket', async (req, res) => {
 
         const data = await response.json();
 
-        // Si Google se queja, mostramos el error real
         if (!response.ok) {
-            console.error("Error de Google API:", data);
-            return res.status(500).json({ error: `Google rechazó la imagen: ${data.error?.message || 'Error desconocido'}` });
+            return res.status(500).json({ error: `Error de Google: ${data.error?.message}` });
         }
 
-        // Leer la respuesta de la IA y limpiarla por si acaso
         let textoFinal = data.candidates[0].content.parts[0].text;
         textoFinal = textoFinal.replace(/```json/gi, '').replace(/```/g, '').trim();
         
         const jsonLineas = JSON.parse(textoFinal);
-        
         res.json({ lineas: jsonLineas });
 
     } catch (error) {
-        console.error("Fallo interno en el servidor:", error);
-        res.status(500).json({ error: `Excepción interna: ${error.message}` });
+        console.error("Error en escaneo:", error);
+        res.status(500).json({ error: `Fallo al procesar: ${error.message}` });
     }
 });
 
