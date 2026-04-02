@@ -511,7 +511,7 @@
         function abrirEditarOT(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = id; document.getElementById('ed_codigo_ot').value = ot.codigo_ot; document.getElementById('ed_ot_cliente_id').value = ot.cliente_id || ''; document.getElementById('ed_fecha_encargo').value = ot.fecha_encargo || ''; document.getElementById('ed_fecha_completada').value = ot.fecha_completada || ''; document.getElementById('ed_horas').value = ot.horas; document.getElementById('ed_marca').value = ot.marca; document.getElementById('ed_tipo_urgencia').value = ot.tipo_urgencia; document.getElementById('ed_materiales_texto').innerText = `${ot.materiales_precio} €`; ed_tecnicosSeleccionados = ot.tecnicos_nombres ? ot.tecnicos_nombres.split(',').map(t => t.trim()) : []; renderizarEdTecnicosOT(); abrirModal('modalEditarOT'); }
         function guardarEdicionOT() { if (ed_tecnicosSeleccionados.length === 0) { alert("❌ Asigna al menos un técnico."); return; } const datos = { codigo_ot: document.getElementById('ed_codigo_ot').value, cliente_id: document.getElementById('ed_ot_cliente_id').value || null, fecha_encargo: document.getElementById('ed_fecha_encargo').value, fecha_completada: document.getElementById('ed_fecha_completada').value, horas: parseFloat(document.getElementById('ed_horas').value), num_tecnicos: ed_tecnicosSeleccionados.length, tecnicos_nombres: ed_tecnicosSeleccionados.join(', '), marca: document.getElementById('ed_marca').value, tipo_urgencia: document.getElementById('ed_tipo_urgencia').value }; if (!validarFormulario(datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada)) return; fetch(`/api/ot/${otActualId}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify(datos) }).then(r => r.json()).then(d => { if (d.error) alert("❌ " + d.error); else { alert(d.mensaje); cerrarModal('modalEditarOT'); cargarOTs(); } }); }
 
-        // --- FACTURAS ---
+        // --- FACTURAS AVANZADAS ---
         async function abrirGeneradorFactura(id) { 
             const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot; 
             document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura(); 
@@ -564,7 +564,9 @@
         function crearTecnico() { const u = document.getElementById('newTecUser').value; const p = document.getElementById('newTecPass').value; if(!u || !p) return; fetch('/api/usuarios/tecnico', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ username: u, password: p }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalTecnico'); cargarUsuariosParaOT(); } }); }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-        inicializarUI();
+        inicializarUI(); 
+        cargarClientes(); 
+        setTimeout(cargarOTs, 500);
     </script>
 </body>
 </html>
