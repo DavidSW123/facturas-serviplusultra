@@ -188,7 +188,9 @@
         </div>
         <div class="menu-items">
             <button class="btn-side" style="background: #27ae60; font-size: 1.1em; font-weight: bold; margin-bottom: 20px;" onclick="abrirModuloStock()">📦 Stock de Materiales</button>
-            <div id="menuGastosArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;"><button class="btn-side" style="background: #e67e22; font-size: 1.1em; font-weight: bold;" onclick="abrirGastosSocios()">💸 Control de Gastos (Socios)</button></div>
+            <div id="menuGastosArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
+                <button class="btn-side" style="background: #e67e22; font-size: 1.1em; font-weight: bold;" onclick="abrirGastosSocios()">💸 Control de Gastos (Socios)</button>
+            </div>
             <button class="btn-side" style="background: #9b59b6; margin-bottom: 20px;" onclick="probarEnvioCorreo()">📧 Probar Envío de Correo</button>
             <div id="menuClientesArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
                 <h4 style="color: #95a5a6; margin-top: 0;">👥 CRM CLIENTES</h4>
@@ -234,7 +236,10 @@
                 <h4 style="margin: 0 0 10px 0; color: #16a085;">Añadir al Almacén</h4>
                 <form id="formStock">
                     <div class="form-group"><label>Descripción del Material</label><input type="text" id="s_desc" placeholder="Ej: Cable cobre 1.5mm" required></div>
-                    <div class="grid-2"><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="s_cant" required></div><div class="form-group"><label>Precio Unidad (€)</label><input type="number" step="0.01" id="s_precio" required></div></div>
+                    <div class="grid-2">
+                        <div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="s_cant" required></div>
+                        <div class="form-group"><label>Precio Unidad (€)</label><input type="number" step="0.01" id="s_precio" required></div>
+                    </div>
                     <div class="form-group"><label>Foto del Ticket / Factura (Opcional)</label><input type="file" id="s_file" accept="image/*"></div>
                     <button type="submit" class="btn-save" style="margin-top: 0; padding: 10px; background: #27ae60;">Guardar en Stock</button>
                 </form>
@@ -261,31 +266,15 @@
 
             <div style="background: #e8f8f5; border: 1px solid #1abc9c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <h4 style="margin: 0 0 10px 0; color: #16a085;">Subir ticket manual rápido</h4>
-                <div class="grid-2"><div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div><div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div>
+                    <div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div>
+                </div>
                 <div class="form-group"><label>Descripción (Opcional)</label><input type="text" id="t_desc" placeholder="Ej: Recambio Leroy Merlin..."></div>
                 <button class="btn-save" style="margin-top: 0; padding: 10px;" onclick="subirTicketOT()">Subir Ticket Manual</button>
             </div>
             <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Líneas Registradas en esta OT</h3>
             <div id="t_galeria" class="ticket-gallery"></div>
-        </div>
-    </div>
-
-    <div id="modalEditarCliente" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="cerrarModal('modalEditarCliente')">&times;</span>
-            <h2 style="margin-top:0; color:#3498db;">✏️ Editar Datos del Cliente</h2>
-            <form id="formEditarCliente">
-                <input type="hidden" id="edit_c_id">
-                <div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="edit_c_nombre" required></div>
-                <div class="form-group"><label>NIF / CIF</label><input type="text" id="edit_c_nif" required></div>
-                <div class="form-group"><label>Dirección Fiscal</label><input type="text" id="edit_c_direccion" required></div>
-                <div class="grid-2">
-                    <div class="form-group"><label>Teléfono</label><input type="text" id="edit_c_telefono"></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="edit_c_email"></div>
-                </div>
-                <div class="form-group"><label>Actualizar Logotipo (Déjalo vacío para mantener el actual)</label><input type="file" id="edit_c_logo_file" accept="image/*"></div>
-                <button type="submit" class="btn-save" style="background-color: #3498db;">💾 Guardar Cambios del Cliente</button>
-            </form>
         </div>
     </div>
 
@@ -313,7 +302,6 @@
                 
                 <div class="grid-2">
                     <div class="form-group"><label>Urgencia</label><select id="ed_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div>
-                    
                     <div class="form-group">
                         <label>Materiales Totales Registrados</label>
                         <div style="display:flex; align-items:center; gap: 10px;">
@@ -322,14 +310,34 @@
                         </div>
                     </div>
                 </div>
-
                 <button type="button" class="btn-save" style="background-color: #f39c12;" onclick="guardarEdicionOT()">💾 Sobrescribir Cambios OT</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditarCliente" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal('modalEditarCliente')">&times;</span>
+            <h2 style="margin-top:0; color:#3498db;">✏️ Editar Datos del Cliente</h2>
+            <form id="formEditarCliente">
+                <input type="hidden" id="edit_c_id">
+                <div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="edit_c_nombre" required></div>
+                <div class="form-group"><label>NIF / CIF</label><input type="text" id="edit_c_nif" required></div>
+                <div class="form-group"><label>Dirección Fiscal</label><input type="text" id="edit_c_direccion" required></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Teléfono</label><input type="text" id="edit_c_telefono"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="edit_c_email"></div>
+                </div>
+                <div class="form-group"><label>Actualizar Logotipo (Opcional)</label><input type="file" id="edit_c_logo_file" accept="image/*"></div>
+                <button type="submit" class="btn-save" style="background-color: #3498db;">💾 Guardar Cambios</button>
             </form>
         </div>
     </div>
 
     <div id="modalGastos" class="modal"><div class="modal-content" style="max-width: 700px; background-color: #fcfcfc;"><span class="close-modal" onclick="cerrarModal('modalGastos')">&times;</span><h2 style="margin-top:0;">💸 Cuentas Claras (Socios)</h2><div style="background: #fff; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><div style="display:flex; border-bottom: 2px solid #ddd; margin-bottom: 15px;"><div id="tabGasto" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #1abc9c; font-weight:bold; color:#1abc9c;" onclick="cambiarTabGastos('gasto')">🛒 Registrar Gasto Compartido</div><div id="tabPago" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;" onclick="cambiarTabGastos('pago')">💸 Pagar Deuda a un Socio</div></div><div id="panelGasto"><form id="formGastoSocio"><div class="grid-2"><div class="form-group"><label>¿Quién pagó el gasto?</label><select id="g_pagador" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div><div class="form-group"><label>Importe Total (€)</label><input type="number" step="0.01" id="g_importe" required></div></div><div class="form-group"><label>Concepto</label><input type="text" id="g_concepto" required></div><div class="form-group"><label>¿Para quiénes era este gasto?</label><div class="checkbox-group"><label><input type="checkbox" name="chk_implicados" value="Giancarlo" checked> Giancarlo</label><label><input type="checkbox" name="chk_implicados" value="David" checked> David</label><label><input type="checkbox" name="chk_implicados" value="Kevin" checked> Kevin</label></div></div><button type="submit" class="btn-save" style="margin-top: 0; padding: 10px;">Añadir Gasto</button></form></div><div id="panelPago" style="display:none;"><div style="background: #ebf5fb; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; border-left: 3px solid #3498db;">Usa esta pestaña exclusivamente cuando uno de vosotros le devuelva dinero a otro para saldar las deudas.</div><form id="formPagoSocio"><div class="grid-2"><div class="form-group"><label style="color:#e74c3c;">¿Quién está devolviendo el dinero?</label><select id="p_emisor" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div><div class="form-group"><label style="color:#27ae60;">¿A quién se lo está dando?</label><select id="p_receptor" required><option value="Kevin">Kevin</option><option value="Giancarlo">Giancarlo</option><option value="David">David</option></select></div></div><div class="form-group"><label>Importe devuelto (€)</label><input type="number" step="0.01" id="p_importe" required></div><button type="submit" class="btn-save" style="margin-top: 0; padding: 10px; background-color: #3498db;">Registrar Devolución de Dinero</button></form></div></div><div class="caja-deudas"><h3>⚖️ Ajuste de Cuentas</h3><div id="resumenDeudas">Cargando...</div><div style="margin-top: 15px; font-size: 0.9em; color: #7f8c8d; display: flex; justify-content: space-around; border-top: 1px solid #ccc; padding-top: 10px;" id="resumenBalances"></div></div><h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px;">📜 Historial de Movimientos</h3><div id="listaHistorialGastos" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius: 8px; border: 1px solid #eee;"></div></div></div>
     <div id="modalDesgloseSplitwise" class="modal" style="z-index: 5000; background: rgba(0,0,0,0.8);"><div class="modal-content" style="max-width: 500px; padding: 20px;"><span class="close-modal" onclick="cerrarModal('modalDesgloseSplitwise')">&times;</span><h3 style="margin-top:0; border-bottom: 2px solid #1abc9c; padding-bottom: 10px;">🔍 Desglose de <span id="desgloseNombre"></span></h3><div style="text-align: center; margin-bottom: 15px; font-size: 1.2em;">Balance Final: <strong id="desgloseTotal"></strong></div><div id="desgloseOperaciones" style="max-height: 400px; overflow-y: auto; background: #f8f9fa; border: 1px solid #ccc; border-radius: 5px;"></div></div></div>
+    <div id="modalClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalClientes')">&times;</span><h2>👥 Cartera de Clientes</h2><div id="gridClientes" class="clientes-grid"></div></div></div>
+    <div id="modalCrearCliente" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalCrearCliente')">&times;</span><h2>🏢 Registrar Nuevo Cliente</h2><form id="formCliente"><div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="c_nombre" required></div><div class="form-group"><label>NIF / CIF</label><input type="text" id="c_nif" required></div><div class="form-group"><label>Dirección Fiscal</label><input type="text" id="c_direccion" required></div><div class="grid-2"><div class="form-group"><label>Teléfono</label><input type="text" id="c_telefono"></div><div class="form-group"><label>Email</label><input type="email" id="c_email"></div></div><div class="form-group"><label>Logotipo (Opcional)</label><input type="file" id="c_logo_file" accept="image/*"></div><button type="submit" class="btn-save" id="btnGuardarCliente">Guardar Cliente</button></form></div></div>
     <div id="modalDetalleCliente" class="modal"><div class="modal-content" style="max-width: 700px;"><span class="close-modal" onclick="cerrarModal('modalDetalleCliente')">&times;</span><div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px;"><img id="d_c_logo" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c;"><h2 id="d_c_nombre" style="margin: 10px 0 0 0;"></h2><div id="d_c_acciones" style="margin-top: 10px;"></div></div><div class="cliente-detalle-box"><p><strong>NIF/CIF:</strong> <span id="d_c_nif"></span></p><p><strong>Dirección:</strong> <span id="d_c_direccion"></span></p><p><strong>Contacto:</strong> <span id="d_c_tel"></span> | <span id="d_c_email"></span></p></div><h3>🛠️ Historial de OTs</h3><div id="d_c_ots" style="max-height: 300px; overflow-y: auto;"></div></div></div>
     <div id="modalSolicitudesClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalSolicitudesClientes')">&times;</span><h2>🔔 Solicitudes de Clientes</h2><table class="tabla-logs"><thead><tr><th>Cliente</th><th>NIF</th><th>Añadido por</th><th>Acción</th></tr></thead><tbody id="tbodySolicitudesClientes"></tbody></table></div></div>
     <div id="modalFactura" class="modal"><div class="modal-content modal-content-folio" id="facturaAreaImpresion"><span class="close-modal no-print" onclick="cerrarModal('modalFactura')">&times;</span><div class="factura-header"><div class="datos-empresa"><img src="/logo.png" style="max-width: 240px; margin-bottom: 10px;" onerror="this.style.display='none'"><h3>ServiPlusUltra Solutions S.L.</h3><p>B-26892760</p><p>Carrer d'Aribau 168, 1-1, 08036 BCN</p></div><div class="datos-factura"><h2>FACTURA</h2><p><strong>Ref:</strong> <span id="factOtCode"></span></p><p><strong>Fecha:</strong> <span id="factFechaHoy"></span></p><div class="caja-cliente-fact"><strong>Facturar a:</strong><select id="selClienteFactura" class="no-print" onchange="actualizarInfoClienteFactura()" style="width:100%; padding:8px; margin-top:5px;"></select><div id="printClienteNombre" class="only-print" style="font-weight:bold; font-size:1.1em;"></div><div id="infoClienteFacturaTexto" style="font-size:0.9em; margin-top:5px;"></div></div></div></div><table class="tabla-holded" id="tablaLineasFactura"><thead><tr><th style="width: 50%;">Concepto</th><th>Cant.</th><th>Precio/U (€)</th><th style="text-align: right;">Total</th><th style="width: 5%;" class="no-print"></th></tr></thead><tbody id="tbodyLineas"></tbody></table><button class="btn-secundario no-print" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea</button><div style="display:flex; justify-content:flex-end; margin-top:30px;"><div class="totales-caja"><p>Base: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total: <span id="factTotal">0.00</span> €</h3></div></div><div style="display: flex; gap: 15px; margin-top: 40px;" class="no-print"><button class="btn-secundario" style="flex-grow: 1; padding: 15px; font-size: 16px;" onclick="window.print()">🖨️ Imprimir PDF Local</button><button class="btn-save" style="flex-grow: 1; margin-top: 0; background-color: #9b59b6;" onclick="enviarFacturaAlCliente()">📧 Enviar Factura por Email</button></div></div></div>
@@ -345,9 +353,8 @@
         const imgDefecto = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
         const imgClienteDef = "https://cdn-icons-png.flaticon.com/512/3135/3135768.png";
         
-        let otsGlobal = [], logsGlobal = [], clientesGlobal = [], lineasFactura = [];
-        let stockGlobal = [];
-        let arrayLineasMat = []; let counterLineas = 0; let modoEdicionOT = null; // 🔴 Nuevo: Para saber si añadimos lineas a OT nueva o existente
+        let otsGlobal = [], logsGlobal = [], clientesGlobal = [], lineasFactura = [], stockGlobal = [];
+        let arrayLineasMat = [], counterLineas = 0, modoEdicionOT = null;
         let otActualId = null, otActualCodigo = '';
         let tecnicosSeleccionados = [], e_tecnicosSeleccionados = [], ed_tecnicosSeleccionados = [];
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
@@ -366,15 +373,42 @@
                 document.getElementById('menuClientesArea').style.display = 'block';
                 document.getElementById('btnCrearTecnicoArea').innerHTML = `<button class="btn-side" onclick="abrirModal('modalTecnico')">👷 Crear Perfil Técnico</button>`;
                 document.getElementById('btnLogsArea').innerHTML = `<button class="btn-side" style="background-color: #f39c12; margin-top: 20px;" onclick="abrirLogs()">📝 Registro de Auditoría</button>`;
-                if(['Giancarlo', 'David', 'Kevin'].includes(sesion.username)) { document.getElementById('g_pagador').value = sesion.username; document.getElementById('p_emisor').value = sesion.username; }
+                if(['Giancarlo', 'David', 'Kevin'].includes(sesion.username)) { 
+                    document.getElementById('g_pagador').value = sesion.username; 
+                    document.getElementById('p_emisor').value = sesion.username; 
+                }
             }
             if (sesion.rol === 'admin') document.getElementById('menuSolicitudesArea').innerHTML = `<button class="btn-side" style="background: #e67e22;" onclick="abrirSolicitudesClientes()">🔔 Solicitudes Nuevos Clientes</button>`;
-            if (sesion.rol === 'director') { document.getElementById('btnGuardarMain').innerText = "Enviar OT a Revisión (Standby)"; document.getElementById('btnGuardarCliente').innerText = "Enviar Cliente a Revisión"; }
+            if (sesion.rol === 'director') { 
+                document.getElementById('btnGuardarMain').innerText = "Enviar OT a Revisión (Standby)"; 
+                document.getElementById('btnGuardarCliente').innerText = "Enviar Cliente a Revisión"; 
+            }
             cargarUsuariosParaOT();
             cargarStock();
         }
 
-        // --- FUNCIONES TECNICOS ---
+        function comprimirImagen(file, callback) { 
+            const reader = new FileReader(); reader.readAsDataURL(file); 
+            reader.onload = (e) => { 
+                const img = new Image(); img.src = e.target.result; 
+                img.onload = () => { 
+                    const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; 
+                    const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; 
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); 
+                    callback(canvas.toDataURL('image/jpeg', 0.6)); 
+                }; 
+            }; 
+        }
+
+        function probarEnvioCorreo() { const email = prompt("Introduce tu correo para la prueba:"); if (!email) return; alert("⏳ Enviando..."); fetch('/api/test-email', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ emailDestino: email }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); }).catch(e => alert("❌ Error.")); }
+
+        function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
+        function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
+        function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
+        function abrirModal(id) { document.getElementById(id).style.display = 'block'; cerrarMenuLateral(); }
+        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- TÉCNICOS ---
         function cargarUsuariosParaOT() { 
             fetch('/api/usuarios/nombres').then(res => res.json()).then(data => { 
                 const s1 = document.getElementById('selTecnicosAdd'); 
@@ -385,8 +419,7 @@
                 if(s3) s3.innerHTML = '<option value="">-- Seleccionar --</option>';
                 data.forEach(u => { 
                     const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`; 
-                    s1.innerHTML += opt; s2.innerHTML += opt; 
-                    if(s3) s3.innerHTML += opt;
+                    s1.innerHTML += opt; s2.innerHTML += opt; if(s3) s3.innerHTML += opt;
                 }); 
             }); 
         }
@@ -404,61 +437,53 @@
         
         function validarFormulario(codigo, fechaIn, fechaOut) { if (!codigo.startsWith(prefijoAnoActual)) { alert(`❌ Debe empezar por ${prefijoAnoActual}`); return false; } if (fechaOut && new Date(fechaOut) <= new Date(fechaIn)) { alert(`❌ Finalización posterior a inicio.`); return false; } return true; }
 
-        function comprimirImagen(file, callback) { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); callback(canvas.toDataURL('image/jpeg', 0.6)); }; }; }
-        function probarEnvioCorreo() { const email = prompt("Introduce tu correo para la prueba:"); if (!email) return; alert("⏳ Enviando..."); fetch('/api/test-email', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ emailDestino: email }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); }).catch(e => alert("❌ Error.")); }
-
-        function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
-        function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
-        function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
-        function abrirModal(id) { document.getElementById(id).style.display = 'block'; cerrarMenuLateral(); }
-        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        // --- 🔴 MATERIALES Y STOCK (MODIFICADO PARA EDICIÓN) 🔴 ---
-        function preguntarMateriales(e) { e.preventDefault(); modoEdicionOT = null; if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; } const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value; if (!validarFormulario(codigo, fechaEn, fechaCo)) return; abrirModal('modalPreguntaMateriales'); }
+        // --- MATERIALES Y STOCK ---
+        function preguntarMateriales(e) { 
+            e.preventDefault(); modoEdicionOT = null; 
+            if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; } 
+            const codigo = document.getElementById('codigo_ot').value; const fechaEn = document.getElementById('fecha_encargo').value; const fechaCo = document.getElementById('fecha_completada').value; 
+            if (!validarFormulario(codigo, fechaEn, fechaCo)) return; 
+            abrirModal('modalPreguntaMateriales'); 
+        }
         
         function abrirEditorMateriales() { cerrarModal('modalPreguntaMateriales'); arrayLineasMat = []; document.getElementById('contenedorLineasMat').innerHTML = ''; document.getElementById('totalMaterialesCalc').innerText = '0.00'; addLineaMaterial(); abrirModal('modalLineasMateriales'); }
-        
-        function abrirGestorMaterialesDesdeEdicion() {
-            cerrarModal('modalEditarOT');
-            abrirTicketsOT(otActualId, document.getElementById('ed_codigo_ot').value);
-        }
-
-        // Botón verde del Gestor de tickets
-        function abrirGestorMaterialesEdicion() {
-            cerrarModal('modalTickets');
-            modoEdicionOT = otActualId;
-            arrayLineasMat = [];
-            document.getElementById('contenedorLineasMat').innerHTML = '';
-            document.getElementById('totalMaterialesCalc').innerText = '0.00';
-            addLineaMaterial();
-            abrirModal('modalLineasMateriales');
-        }
-
+        function abrirGestorMaterialesDesdeEdicion() { cerrarModal('modalEditarOT'); abrirTicketsOT(otActualId, document.getElementById('ed_codigo_ot').value); }
+        function abrirGestorMaterialesEdicion() { cerrarModal('modalTickets'); modoEdicionOT = otActualId; arrayLineasMat = []; document.getElementById('contenedorLineasMat').innerHTML = ''; document.getElementById('totalMaterialesCalc').innerText = '0.00'; addLineaMaterial(); abrirModal('modalLineasMateriales'); }
         function addLineaMaterial() { const idLinea = counterLineas++; arrayLineasMat.push({ id: idLinea, is_stock: false, stock_id: '', descripcion: '', cantidad: 1, precio: 0, importe: 0, imagen: '' }); renderizarLineasMateriales(); }
         function borrarLineaMaterial(id) { arrayLineasMat = arrayLineasMat.filter(l => l.id !== id); renderizarLineasMateriales(); }
-        function onChangeLinea(id, campo, valor) { let linea = arrayLineasMat.find(l => l.id === id); if (!linea) return; if (campo === 'is_stock') { linea.is_stock = valor; linea.descripcion = ''; linea.stock_id = ''; linea.precio = 0; linea.imagen = ''; } else if (campo === 'stock_id') { linea.stock_id = valor; let sItem = stockGlobal.find(s => s.id == valor); if(sItem) { linea.descripcion = sItem.descripcion; linea.precio = sItem.precio_unidad; } } else { linea[campo] = (campo==='cantidad'||campo==='precio') ? parseFloat(valor)||0 : valor; } linea.importe = linea.cantidad * linea.precio; let total = arrayLineasMat.reduce((acc, curr) => acc + curr.importe, 0); document.getElementById('totalMaterialesCalc').innerText = total.toFixed(2); if(campo === 'is_stock' || campo === 'stock_id') renderizarLineasMateriales(); }
+        
+        function onChangeLinea(id, campo, valor) { 
+            let linea = arrayLineasMat.find(l => l.id === id); if (!linea) return; 
+            if (campo === 'is_stock') { linea.is_stock = valor; linea.descripcion = ''; linea.stock_id = ''; linea.precio = 0; linea.imagen = ''; } 
+            else if (campo === 'stock_id') { linea.stock_id = valor; let sItem = stockGlobal.find(s => s.id == valor); if(sItem) { linea.descripcion = sItem.descripcion; linea.precio = sItem.precio_unidad; } } 
+            else { linea[campo] = (campo==='cantidad'||campo==='precio') ? parseFloat(valor)||0 : valor; } 
+            linea.importe = linea.cantidad * linea.precio; 
+            let total = arrayLineasMat.reduce((acc, curr) => acc + curr.importe, 0); document.getElementById('totalMaterialesCalc').innerText = total.toFixed(2); 
+            if(campo === 'is_stock' || campo === 'stock_id') renderizarLineasMateriales(); 
+        }
+        
         function handleFileSelect(id, fileInput) { if(!fileInput.files[0]) return; comprimirImagen(fileInput.files[0], (b64) => { let linea = arrayLineasMat.find(l => l.id === id); if(linea) { linea.imagen = b64; alert('✅ Foto guardada en la línea'); } }); }
         
-        function renderizarLineasMateriales() { const cont = document.getElementById('contenedorLineasMat'); cont.innerHTML = ''; arrayLineasMat.forEach(l => { let opcionesStock = '<option value="">-- Elige del almacén --</option>'; stockGlobal.forEach(s => { if(s.cantidad > 0) opcionesStock += `<option value="${s.id}">${s.descripcion} (${s.cantidad} disp.)</option>`; }); let htmlDesc = l.is_stock ? `<select onchange="onChangeLinea(${l.id}, 'stock_id', this.value)" required>${opcionesStock}</select>` : `<input type="text" placeholder="Ej: Rollo Cable..." value="${l.descripcion}" oninput="onChangeLinea(${l.id}, 'descripcion', this.value)" required>`; let htmlFoto = l.is_stock ? `<small style="color:#27ae60; font-weight:bold;">Stock descontado auto.</small>` : `<input type="file" accept="image/*" capture="environment" onchange="handleFileSelect(${l.id}, this)">`; cont.innerHTML += `<div class="linea-mat"><button class="eliminar-linea" onclick="borrarLineaMaterial(${l.id})">X</button><div style="margin-bottom: 10px;"><label style="display:inline-flex; align-items:center; gap:5px; font-weight:normal; cursor:pointer;"><input type="checkbox" ${l.is_stock?'checked':''} onchange="onChangeLinea(${l.id}, 'is_stock', this.checked)"> Usar material existente del Stock</label></div><div class="grid-linea"><div><label>Descripción</label>${htmlDesc}</div><div><label>Cant.</label><input type="number" step="0.01" value="${l.cantidad}" oninput="onChangeLinea(${l.id}, 'cantidad', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.precio}).toFixed(2)" required></div><div><label>Precio/U (€)</label><input type="number" step="0.01" value="${l.precio}" ${l.is_stock?'readonly':''} oninput="onChangeLinea(${l.id}, 'precio', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.cantidad}).toFixed(2)" required></div><div><label>Total (€)</label><strong id="tot_${l.id}">${l.importe.toFixed(2)}</strong></div></div><div style="margin-top: 10px;">${htmlFoto}</div></div>`; if(l.is_stock && l.stock_id) { setTimeout(() => { let selects = cont.querySelectorAll('select'); selects[selects.length-1].value = l.stock_id; }, 10); } }); }
+        function renderizarLineasMateriales() { 
+            const cont = document.getElementById('contenedorLineasMat'); cont.innerHTML = ''; 
+            arrayLineasMat.forEach(l => { 
+                let opcionesStock = '<option value="">-- Elige del almacén --</option>'; stockGlobal.forEach(s => { if(s.cantidad > 0) opcionesStock += `<option value="${s.id}">${s.descripcion} (${s.cantidad} disp.)</option>`; }); 
+                let htmlDesc = l.is_stock ? `<select onchange="onChangeLinea(${l.id}, 'stock_id', this.value)" required>${opcionesStock}</select>` : `<input type="text" placeholder="Ej: Rollo Cable..." value="${l.descripcion}" oninput="onChangeLinea(${l.id}, 'descripcion', this.value)" required>`; 
+                let htmlFoto = l.is_stock ? `<small style="color:#27ae60; font-weight:bold;">Stock descontado auto.</small>` : `<input type="file" accept="image/*" capture="environment" onchange="handleFileSelect(${l.id}, this)">`; 
+                cont.innerHTML += `<div class="linea-mat"><button class="eliminar-linea" onclick="borrarLineaMaterial(${l.id})">X</button><div style="margin-bottom: 10px;"><label style="display:inline-flex; align-items:center; gap:5px; font-weight:normal; cursor:pointer;"><input type="checkbox" ${l.is_stock?'checked':''} onchange="onChangeLinea(${l.id}, 'is_stock', this.checked)"> Usar material existente del Stock</label></div><div class="grid-linea"><div><label>Descripción</label>${htmlDesc}</div><div><label>Cant.</label><input type="number" step="0.01" value="${l.cantidad}" oninput="onChangeLinea(${l.id}, 'cantidad', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.precio}).toFixed(2)" required></div><div><label>Precio/U (€)</label><input type="number" step="0.01" value="${l.precio}" ${l.is_stock?'readonly':''} oninput="onChangeLinea(${l.id}, 'precio', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.cantidad}).toFixed(2)" required></div><div><label>Total (€)</label><strong id="tot_${l.id}">${l.importe.toFixed(2)}</strong></div></div><div style="margin-top: 10px;">${htmlFoto}</div></div>`; 
+                if(l.is_stock && l.stock_id) { setTimeout(() => { let selects = cont.querySelectorAll('select'); selects[selects.length-1].value = l.stock_id; }, 10); } 
+            }); 
+        }
         
         function guardarOTFinal(tieneMateriales) { 
-            // 🔴 Si modoEdicionOT tiene ID, es que estamos añadiendo líneas a una OT antigua
             if (modoEdicionOT) {
                 if (!tieneMateriales) { cerrarModal('modalPreguntaMateriales'); return; }
                 if (arrayLineasMat.length === 0) { alert("❌ No hay líneas."); return; }
-                for (let l of arrayLineasMat) {
-                    if (l.is_stock && !l.stock_id) { alert("❌ Elige un material del stock."); return; }
-                    if (!l.is_stock && !l.descripcion) { alert("❌ Pon descripción en las líneas."); return; }
-                }
+                for (let l of arrayLineasMat) { if (l.is_stock && !l.stock_id) { alert("❌ Elige un material del stock."); return; } if (!l.is_stock && !l.descripcion) { alert("❌ Pon descripción en las líneas."); return; } }
                 fetch(`/api/ot/${modoEdicionOT}/lineas_materiales`, { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ lineas_materiales: arrayLineasMat }) })
-                .then(r => r.json()).then(data => {
-                    if(data.error) alert("❌ " + data.error);
-                    else { alert("✅ " + data.mensaje); cerrarModal('modalLineasMateriales'); cargarOTs(); cargarStock(); abrirTicketsOT(otActualId, otActualCodigo); }
-                });
+                .then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("✅ " + data.mensaje); cerrarModal('modalLineasMateriales'); cargarOTs(); cargarStock(); abrirTicketsOT(otActualId, otActualCodigo); } });
                 return;
             }
-
-            // CREACIÓN NORMAL DE OT NUEVA
             if (tieneMateriales) { if (arrayLineasMat.length === 0) { alert("❌ No hay líneas de materiales."); return; } for (let l of arrayLineasMat) { if (l.is_stock && !l.stock_id) { alert("❌ Elige un material del stock."); return; } if (!l.is_stock && !l.descripcion) { alert("❌ Pon descripción en las líneas."); return; } } } else { arrayLineasMat = []; cerrarModal('modalPreguntaMateriales'); } 
             const datos = { codigo_ot: document.getElementById('codigo_ot').value, fecha_encargo: document.getElementById('fecha_encargo').value, fecha_completada: document.getElementById('fecha_completada').value, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, cliente_id: document.getElementById('ot_cliente_id').value || null, lineas_materiales: arrayLineasMat }; 
             fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); if(tieneMateriales) cerrarModal('modalLineasMateriales'); cargarOTs(); cargarStock(); } }); 
@@ -478,63 +503,37 @@
         function abrirSolicitudesClientes() { const tbody = document.getElementById('tbodySolicitudesClientes'); tbody.innerHTML = ''; const p = clientesGlobal.filter(c => c.estado === 'PENDIENTE'); if(p.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay solicitudes</td></tr>'; p.forEach(c => tbody.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td>${c.nif}</td><td>Director</td><td><button style="background:#27ae60; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'APROBADO')">✅</button> <button style="background:#e74c3c; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'RECHAZADO')">❌</button></td></tr>`); abrirModal('modalSolicitudesClientes'); }
         function resolverCliente(id, estado) { fetch(`/api/clientes/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarClientes(); abrirSolicitudesClientes(); }); }
 
-        // --- OTs ---
+        // --- OTs MAIN Y EDICIÓN ---
         function cargarOTs() { fetch('/api/ot').then(res => res.json()).then(ots => { otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = ''; ots.forEach(ot => { let btnB = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`; let disable = sesion.rol === 'tecnico' ? 'disabled' : ''; let btnF = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : ''; let btnE = sesion.rol === 'admin' ? `<button class="btn-editar" onclick="abrirEditarOT(${ot.id})">✏️</button>` : ''; let nC = ot.cliente_id ? (clientesGlobal.find(c => c.id === ot.cliente_id)?.nombre || '') : ''; let sC = nC ? `<br><small style="color:#7f8c8d;">🏢 ${nC}</small>` : ''; let sT = ot.tecnicos_nombres ? `<br><small style="color:#3498db; font-weight:bold;">👷 ${ot.tecnicos_nombres}</small>` : ''; document.getElementById('contenedorOTs').innerHTML += `<div class="ot-card"><div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca} ${sC} ${sT}<br><strong style="color:#e67e22;">Materiales/Tickets: ${ot.materiales_precio} €</strong></div><div class="actions"><select class="sel-estado ${ot.estado === 'HECHO' ? 'est-hecho' : (ot.estado === 'ANULADO' ? 'est-anulado' : 'est-pendiente')}" ${disable} onchange="cambiarEstado(${ot.id}, this)"><option value="PENDIENTE" ${ot.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option><option value="HECHO" ${ot.estado === 'HECHO' ? 'selected' : ''}>HECHO</option><option value="ANULADO" ${ot.estado === 'ANULADO' ? 'selected' : ''}>ANULADO</option></select><button class="btn-ticket" onclick="abrirTicketsOT(${ot.id}, '${ot.codigo_ot}')">🧾 Materiales / Tickets</button>${btnF} ${btnE} ${btnB}</div></div>`; }); }); }
         function cambiarEstado(id, sel) { fetch(`/api/ot/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado: sel.value }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
         function eliminarOT(id) { if(confirm("¿Solicitar borrado?")) fetch(`/api/ot/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
+        
         function abrirEditarOT(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = id; document.getElementById('ed_codigo_ot').value = ot.codigo_ot; document.getElementById('ed_ot_cliente_id').value = ot.cliente_id || ''; document.getElementById('ed_fecha_encargo').value = ot.fecha_encargo || ''; document.getElementById('ed_fecha_completada').value = ot.fecha_completada || ''; document.getElementById('ed_horas').value = ot.horas; document.getElementById('ed_marca').value = ot.marca; document.getElementById('ed_tipo_urgencia').value = ot.tipo_urgencia; document.getElementById('ed_materiales_texto').innerText = `${ot.materiales_precio} €`; ed_tecnicosSeleccionados = ot.tecnicos_nombres ? ot.tecnicos_nombres.split(',').map(t => t.trim()) : []; renderizarEdTecnicosOT(); abrirModal('modalEditarOT'); }
         function guardarEdicionOT() { if (ed_tecnicosSeleccionados.length === 0) { alert("❌ Asigna al menos un técnico."); return; } const datos = { codigo_ot: document.getElementById('ed_codigo_ot').value, cliente_id: document.getElementById('ed_ot_cliente_id').value || null, fecha_encargo: document.getElementById('ed_fecha_encargo').value, fecha_completada: document.getElementById('ed_fecha_completada').value, horas: parseFloat(document.getElementById('ed_horas').value), num_tecnicos: ed_tecnicosSeleccionados.length, tecnicos_nombres: ed_tecnicosSeleccionados.join(', '), marca: document.getElementById('ed_marca').value, tipo_urgencia: document.getElementById('ed_tipo_urgencia').value }; if (!validarFormulario(datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada)) return; fetch(`/api/ot/${otActualId}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify(datos) }).then(r => r.json()).then(d => { if (d.error) alert("❌ " + d.error); else { alert(d.mensaje); cerrarModal('modalEditarOT'); cargarOTs(); } }); }
 
-        // --- 🔴 FACTURAS AVANZADAS (NUEVO CALCULO DE CANTIDAD) 🔴 ---
+        // --- FACTURAS ---
         async function abrirGeneradorFactura(id) { 
-            const ot = otsGlobal.find(o => o.id === id); 
-            otActualId = ot.id; 
-            otActualCodigo = ot.codigo_ot; 
-            document.getElementById('factOtCode').innerText = ot.codigo_ot; 
-            document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); 
-            document.getElementById('selClienteFactura').value = ot.cliente_id || ""; 
-            actualizarInfoClienteFactura(); 
+            const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot; 
+            document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura(); 
             
-            let isUrg = ot.tipo_urgencia === 'Rojo'; 
-            let pDesp = isUrg ? 55.00 : 40.00; 
-            let pHora = isUrg ? 45.00 : 25.00; 
-            let labelTec = ot.num_tecnicos === 1 ? 'técnico' : 'técnicos';
-            let txtObra = isUrg ? `Mano de Obra URGENTE (${ot.num_tecnicos} ${labelTec} x ${ot.horas} hrs)` : `Mano de Obra (${ot.num_tecnicos} ${labelTec} x ${ot.horas} hrs)`; 
-            
-            lineasFactura = [
-                { concepto: "Desplazamiento", cantidad: 1, precio: pDesp }, 
-                { concepto: txtObra, cantidad: ot.horas * ot.num_tecnicos, precio: pHora }
-            ]; 
+            let isUrg = ot.tipo_urgencia === 'Rojo'; let pDesp = isUrg ? 55.00 : 40.00; let pHora = isUrg ? 45.00 : 25.00; let labelTec = ot.num_tecnicos === 1 ? 'técnico' : 'técnicos'; let txtObra = isUrg ? `Mano de Obra URGENTE (${ot.num_tecnicos} ${labelTec} x ${ot.horas} hrs)` : `Mano de Obra (${ot.num_tecnicos} ${labelTec} x ${ot.horas} hrs)`; 
+            lineasFactura = [ { concepto: "Desplazamiento", cantidad: 1, precio: pDesp }, { concepto: txtObra, cantidad: ot.horas * ot.num_tecnicos, precio: pHora } ]; 
 
             try {
-                const res = await fetch(`/api/ot/${id}/adjuntos`);
-                const adjuntos = await res.json();
-                
+                const res = await fetch(`/api/ot/${id}/adjuntos`); const adjuntos = await res.json();
                 if (adjuntos.length > 0) {
                     adjuntos.forEach(adj => {
                         if (adj.importe > 0) {
-                            let cant = 1;
-                            let concepto = adj.descripcion || 'Material / Recambio';
-                            // Extraer cantidad de "(Cant: X)"
+                            let cant = 1; let concepto = adj.descripcion || 'Material / Recambio';
                             let match = concepto.match(/\(Cant:\s*([\d.]+)\)/i);
-                            if (match) {
-                                cant = parseFloat(match[1]);
-                                concepto = concepto.replace(/\(Cant:\s*[\d.]+\)/i, '').replace(/\[STOCK\]\s*/i, '').trim();
-                            }
+                            if (match) { cant = parseFloat(match[1]); concepto = concepto.replace(/\(Cant:\s*[\d.]+\)/i, '').replace(/\[STOCK\]\s*/i, '').trim(); }
                             let pUnitario = cant > 0 ? (adj.importe / cant) : adj.importe;
-
                             lineasFactura.push({ concepto: concepto, cantidad: cant, precio: pUnitario });
                         }
                     });
-                } else if (ot.materiales_precio > 0) {
-                    lineasFactura.push({ concepto: "Materiales y repuestos (Sin detallar)", cantidad: 1, precio: ot.materiales_precio });
-                }
-            } catch (e) {
-                if(ot.materiales_precio > 0) lineasFactura.push({ concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio });
-            }
-
-            renderizarTablaFactura(); 
-            abrirModal('modalFactura'); 
+                } else if (ot.materiales_precio > 0) { lineasFactura.push({ concepto: "Materiales y repuestos (Sin detallar)", cantidad: 1, precio: ot.materiales_precio }); }
+            } catch (e) { if(ot.materiales_precio > 0) lineasFactura.push({ concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }); }
+            renderizarTablaFactura(); abrirModal('modalFactura'); 
         }
 
         function actualizarInfoClienteFactura() { const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto'); if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; } const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`; }
@@ -553,32 +552,19 @@
         document.getElementById('formPagoSocio').addEventListener('submit', function(e) { e.preventDefault(); const emisor = document.getElementById('p_emisor').value; const receptor = document.getElementById('p_receptor').value; const importe = document.getElementById('p_importe').value; if(emisor === receptor) { alert("❌ No puedes devolverte dinero a ti mismo."); return; } fetch('/api/gastos', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ pagador: emisor, importe: importe, concepto: '[PAGO] Liquidación de deuda', implicados: [receptor] }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else { document.getElementById('p_importe').value = ''; abrirGastosSocios(); } }); });
         function borrarGastoSocio(id) { if(confirm("¿Borrar este movimiento?")) { fetch(`/api/gastos/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(r => r.json()).then(data => { abrirGastosSocios(); }); } }
 
-        // --- 🔴 MATERIALES GALERÍA Y BORRADO 🔴 ---
-        function abrirTicketsOT(id, codigo) { otActualId = id; otActualCodigo = codigo; document.getElementById('t_codigo_ot').innerText = codigo; document.getElementById('t_file').value = ''; document.getElementById('t_importe').value = ''; document.getElementById('t_desc').value = ''; fetch(`/api/ot/${id}/adjuntos`).then(res => res.json()).then(data => { const galeria = document.getElementById('t_galeria'); galeria.innerHTML = ''; if(data.length === 0) galeria.innerHTML = '<p style="grid-column: 1/-1; color:#7f8c8d; text-align:center;">No hay líneas o tickets subidos.</p>'; data.forEach(t => { 
-            let btnB = sesion.rol === 'admin' ? `<button class="btn-peligro" style="padding: 3px 6px; font-size: 0.8em; margin-top: 5px;" onclick="borrarAdjuntoOT(${t.id}, ${id})">🗑️ Borrar</button>` : '';
-            let isStock = String(t.descripcion).includes('[STOCK]');
-            let imgHtml = isStock ? `<div style="height:150px; background:#e8f8f5; display:flex; align-items:center; justify-content:center; color:#27ae60; font-weight:bold;">📦 STOCK</div>` : `<img src="${t.imagen || imgDefecto}" class="ticket-img" onclick="window.open('${t.imagen}')">`;
-            
-            galeria.innerHTML += `<div class="ticket-card">${imgHtml}<div class="ticket-info"><strong>${t.importe} €</strong><br><small>${t.descripcion || 'Sin descripción'}</small><br><small style="color:#aaa;">${t.fecha}</small><br>${btnB}</div></div>`; 
-        }); abrirModal('modalTickets'); }); }
-        
+        // --- TICKETS Y GALERÍA ---
+        function abrirTicketsOT(id, codigo) { otActualId = id; otActualCodigo = codigo; document.getElementById('t_codigo_ot').innerText = codigo; document.getElementById('t_file').value = ''; document.getElementById('t_importe').value = ''; document.getElementById('t_desc').value = ''; fetch(`/api/ot/${id}/adjuntos`).then(res => res.json()).then(data => { const galeria = document.getElementById('t_galeria'); galeria.innerHTML = ''; if(data.length === 0) galeria.innerHTML = '<p style="grid-column: 1/-1; color:#7f8c8d; text-align:center;">No hay líneas o tickets subidos.</p>'; data.forEach(t => { let btnB = sesion.rol === 'admin' ? `<button class="btn-peligro" style="padding: 3px 6px; font-size: 0.8em; margin-top: 5px;" onclick="borrarAdjuntoOT(${t.id}, ${id})">🗑️ Borrar</button>` : ''; let isStock = String(t.descripcion).includes('[STOCK]'); let imgHtml = isStock ? `<div style="height:150px; background:#e8f8f5; display:flex; align-items:center; justify-content:center; color:#27ae60; font-weight:bold;">📦 STOCK</div>` : `<img src="${t.imagen || imgDefecto}" class="ticket-img" onclick="window.open('${t.imagen}')">`; galeria.innerHTML += `<div class="ticket-card">${imgHtml}<div class="ticket-info"><strong>${t.importe} €</strong><br><small>${t.descripcion || 'Sin descripción'}</small><br><small style="color:#aaa;">${t.fecha}</small><br>${btnB}</div></div>`; }); abrirModal('modalTickets'); }); }
         function subirTicketOT() { const file = document.getElementById('t_file').files[0]; const importe = document.getElementById('t_importe').value; const desc = document.getElementById('t_desc').value; if(!file) { alert("❌ Adjunta una foto."); return; } comprimirImagen(file, (imagenB64) => { fetch(`/api/ot/${otActualId}/adjuntos`, { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ imagen: imagenB64, importe: importe, descripcion: desc }) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("✅ " + data.mensaje); abrirTicketsOT(otActualId, otActualCodigo); cargarOTs(); } }); }); }
-        
-        function borrarAdjuntoOT(idAdjunto, otId) {
-            if(confirm("¿Seguro que quieres borrar este material/ticket? Se restará del total de la OT.")) {
-                fetch(`/api/ot/adjuntos/${idAdjunto}`, { method: 'DELETE', headers: headersSeguridad })
-                .then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else { abrirTicketsOT(otId, otActualCodigo); cargarOTs(); } });
-            }
-        }
+        function borrarAdjuntoOT(idAdjunto, otId) { if(confirm("¿Seguro que quieres borrar este material/ticket? Se restará del total de la OT.")) { fetch(`/api/ot/adjuntos/${idAdjunto}`, { method: 'DELETE', headers: headersSeguridad }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else { abrirTicketsOT(otId, otActualCodigo); cargarOTs(); } }); } }
 
-        // --- LOGS Y VARIOS ---
+        // --- LOGS Y PASS ---
         function abrirLogs() { fetch('/api/logs').then(res => res.json()).then(data => { logsGlobal = data; const tbody = document.getElementById('cuerpoLogs'); tbody.innerHTML = ''; data.forEach(log => { let bc = log.estado === 'PENDIENTE' ? 'f39c12' : (log.estado === 'APROBADO' ? '27ae60' : 'e74c3c'); let b = ''; if (log.estado === 'PENDIENTE' && sesion.rol === 'admin') b = `<button onclick="resolverLog(${log.id}, 'APROBADO')">✅</button> <button onclick="resolverLog(${log.id}, 'RECHAZADO')">❌</button>`; tbody.innerHTML += `<tr><td>${log.fecha}</td><td>${log.usuario}</td><td>${log.accion}</td><td>${log.referencia}</td><td><span class="badge-log" style="background:#${bc}">${log.estado}</span></td><td>${b||'-'}</td></tr>`; }); abrirModal('modalLogs'); }); }
         function resolverLog(id, res) { let m = ""; if (res === 'RECHAZADO') { m = prompt("Motivo:"); if (!m) return; } fetch(`/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion: res, motivo: m }) }).then(r => r.json()).then(d => { alert(d.mensaje); abrirLogs(); cargarOTs(); }); }
         function guardarPassword() { fetch('/api/usuarios/password', { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ username: sesion.username, oldPass: document.getElementById('oldPass').value, newPass: document.getElementById('newPass').value }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalPassword'); } }); }
         function crearTecnico() { const u = document.getElementById('newTecUser').value; const p = document.getElementById('newTecPass').value; if(!u || !p) return; fetch('/api/usuarios/tecnico', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ username: u, password: p }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalTecnico'); cargarUsuariosParaOT(); } }); }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-        inicializarUI(); cargarClientes(); setTimeout(cargarOTs, 500);
+        inicializarUI();
     </script>
 </body>
 </html>
