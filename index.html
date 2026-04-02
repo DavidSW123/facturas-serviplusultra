@@ -625,6 +625,8 @@
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
         inicializarUI();
+        cargarClientes(); 
+        setTimeout(cargarOTs, 500);
     </script>
 </body>
 </html>
