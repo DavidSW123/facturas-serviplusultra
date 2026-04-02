@@ -27,8 +27,6 @@ async function inicializarDB() {
         await db.execute(`CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, nif TEXT, direccion TEXT, email TEXT, telefono TEXT, logo TEXT, estado TEXT DEFAULT 'PENDIENTE')`);
         await db.execute(`CREATE TABLE IF NOT EXISTS ot_adjuntos (id INTEGER PRIMARY KEY AUTOINCREMENT, ot_id INTEGER, imagen TEXT NOT NULL, importe REAL DEFAULT 0, descripcion TEXT, fecha TEXT)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS gastos_socios (id INTEGER PRIMARY KEY AUTOINCREMENT, pagador TEXT NOT NULL, concepto TEXT, importe REAL, fecha TEXT)`);
-        
-        // 🔴 NUEVA TABLA: STOCK DE MATERIALES 🔴
         await db.execute(`CREATE TABLE IF NOT EXISTS stock_materiales (id INTEGER PRIMARY KEY AUTOINCREMENT, descripcion TEXT NOT NULL, cantidad REAL NOT NULL, precio_unidad REAL NOT NULL, imagen TEXT, fecha TEXT)`);
 
         try { await db.execute(`ALTER TABLE ordenes_trabajo ADD COLUMN cliente_id INTEGER`); } catch (e) { }
@@ -50,50 +48,44 @@ app.put('/api/usuarios/foto', async (req, res) => { await db.execute({ sql: `UPD
 app.put('/api/usuarios/password', async (req, res) => { const r = await db.execute({ sql: `SELECT id FROM usuarios WHERE username = ? AND password = ?`, args: [req.body.username, req.body.oldPass] }); if (r.rows.length === 0) return res.status(400).json({ error: 'Clave actual incorrecta' }); await db.execute({ sql: `UPDATE usuarios SET password = ? WHERE username = ?`, args: [req.body.newPass, req.body.username] }); res.json({ mensaje: 'Contraseña cambiada' }); });
 app.post('/api/usuarios/tecnico', async (req, res) => { if (req.headers['x-rol'] !== 'admin' && req.headers['x-rol'] !== 'director') return res.status(403).json({ error: 'Sin permisos' }); try { await db.execute({ sql: `INSERT INTO usuarios (username, password, rol) VALUES (?, ?, 'tecnico')`, args: [req.body.username, req.body.password] }); res.json({ mensaje: 'Técnico creado' }); } catch (e) { res.status(500).json({ error: 'El usuario ya existe' }); } });
 app.get('/api/usuarios/nombres', async (req, res) => { try { const r = await db.execute("SELECT username, rol FROM usuarios ORDER BY rol, username"); res.json(r.rows); } catch (e) { res.status(500).json({ error: 'Error' }); } });
+
+// --- API CLIENTES ---
 app.get('/api/clientes', async (req, res) => { try { const r = await db.execute("SELECT * FROM clientes ORDER BY nombre ASC"); res.json(r.rows); } catch (e) { res.status(500).json({ error: 'Error' }); } });
 app.post('/api/clientes', async (req, res) => { const rol = req.headers['x-rol']; const estado = rol === 'admin' ? 'APROBADO' : 'PENDIENTE'; const { nombre, nif, direccion, email, telefono, logo } = req.body; try { await db.execute({ sql: `INSERT INTO clientes (nombre, nif, direccion, email, telefono, logo, estado) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [nombre, nif, direccion, email, telefono, logo || '', estado] }); res.json({ mensaje: estado === 'APROBADO' ? 'Cliente añadido a la BBDD' : 'Petición enviada a Giancarlo' }); } catch (e) { res.status(500).json({ error: 'Error al crear cliente' }); } });
 app.put('/api/clientes/:id/estado', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo puede aprobar' }); try { await db.execute({ sql: `UPDATE clientes SET estado = ? WHERE id = ?`, args: [req.body.estado, req.params.id] }); res.json({ mensaje: `Cliente ${req.body.estado}` }); } catch (e) { res.status(500).json({ error: 'Error' }); } });
 
-// 🔴 MODIFICADA LA CREACIÓN DE OT PARA PROCESAR LOS MATERIALES EN CASCADA 🔴
+// 🔴 NUEVA RUTA: EDITAR CLIENTE COMPLETO 🔴
+app.put('/api/clientes/:id', async (req, res) => {
+    if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo los administradores pueden editar clientes directamente.' });
+    const { nombre, nif, direccion, email, telefono, logo } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE clientes SET nombre = ?, nif = ?, direccion = ?, email = ?, telefono = ?, logo = ? WHERE id = ?`,
+            args: [nombre, nif, direccion, email, telefono, logo || '', req.params.id]
+        });
+        res.json({ mensaje: '✅ Cliente actualizado correctamente.' });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- API OTS ---
 app.post('/api/ot', async (req, res) => { 
     const rol = req.headers['x-rol']; const user = req.headers['x-user']; const datos = req.body; const err = validarOT(datos); if (err) return res.status(400).json({ error: err }); 
-    
-    // Calcular el total de materiales que vienen del formulario avanzado
-    let totalMateriales = 0;
-    if (datos.lineas_materiales && datos.lineas_materiales.length > 0) {
-        totalMateriales = datos.lineas_materiales.reduce((acc, curr) => acc + curr.importe, 0);
-    }
-    datos.materiales_precio = totalMateriales; // Sobrescribimos con lo real calculado
-
-    if (rol === 'director') { 
-        await registrarLog(user, 'Añadir OT', datos.codigo_ot, datos, 'PENDIENTE'); 
-        return res.json({ mensaje: 'OT enviada a Giancarlo para su aprobación.' }); 
-    } 
-
+    let totalMateriales = 0; if (datos.lineas_materiales && datos.lineas_materiales.length > 0) { totalMateriales = datos.lineas_materiales.reduce((acc, curr) => acc + curr.importe, 0); } datos.materiales_precio = totalMateriales; 
+    if (rol === 'director') { await registrarLog(user, 'Añadir OT', datos.codigo_ot, datos, 'PENDIENTE'); return res.json({ mensaje: 'OT enviada a Giancarlo para su aprobación.' }); } 
     const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE'; 
     try { 
         const r = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] }); 
         const newOtId = Number(r.lastInsertRowid);
-
-        // Si trae materiales, los insertamos como adjuntos y restamos stock si toca
         if (datos.lineas_materiales && datos.lineas_materiales.length > 0) {
             const fMat = new Date().toLocaleString('es-ES');
             for (let mat of datos.lineas_materiales) {
                 let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`;
                 await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [newOtId, mat.imagen || '', mat.importe, textoDesc, fMat] });
-                
-                if (mat.is_stock && mat.stock_id) {
-                    await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] });
-                }
+                if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); }
             }
         }
-
-        await registrarLog(user, 'Añadir OT', `OT: ${datos.codigo_ot}`, datos, 'APROBADO'); 
-        res.json({ mensaje: 'OT y materiales guardados correctamente.', id: newOtId }); 
-    } catch (e) { 
-        if (e.message && e.message.includes('UNIQUE')) { res.status(400).json({ error: 'Ese código de OT ya está registrado.' }); } 
-        else { res.status(500).json({ error: `Fallo: ${e.message}` }); } 
-    } 
+        await registrarLog(user, 'Añadir OT', `OT: ${datos.codigo_ot}`, datos, 'APROBADO'); res.json({ mensaje: 'OT y materiales guardados correctamente.', id: newOtId }); 
+    } catch (e) { if (e.message && e.message.includes('UNIQUE')) { res.status(400).json({ error: 'Ese código de OT ya está registrado.' }); } else { res.status(500).json({ error: `Fallo: ${e.message}` }); } } 
 });
 
 app.get('/api/ot', async (req, res) => { try { const r = await db.execute("SELECT * FROM ordenes_trabajo ORDER BY id DESC"); res.json(r.rows); } catch (e) { res.status(500).json({ error: `Fallo: ${e.message}` }); } });
@@ -113,7 +105,6 @@ app.post('/api/ot/:id/adjuntos', async (req, res) => { const ot_id = req.params.
 app.get('/api/logs', async (req, res) => { try { const r = await db.execute("SELECT * FROM logs ORDER BY id DESC"); res.json(r.rows); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.put('/api/logs/:id', async (req, res) => { if (req.body.nuevosDatos.codigo_ot) { const err = validarOT(req.body.nuevosDatos); if (err) return res.status(400).json({ error: err }); } await db.execute({ sql: `UPDATE logs SET datos = ? WHERE id = ?`, args: [JSON.stringify(req.body.nuevosDatos), req.params.id] }); res.json({ mensaje: 'Petición actualizada.' }); });
 
-// 🔴 RESOLUCIÓN DEL LOG TAMBIÉN PROCESA MATERIALES SI EL DIRECTOR LA PUSO EN ESPERA 🔴
 app.put('/api/logs/:id/resolver', async (req, res) => {
     if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo.' });
     const { id } = req.params; const { resolucion, motivo } = req.body;
@@ -124,7 +115,6 @@ app.put('/api/logs/:id/resolver', async (req, res) => {
         if (log.accion === 'Añadir OT') { 
             const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE'; 
             const rIn = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] });
-            
             const newOtId = Number(rIn.lastInsertRowid);
             if (datos.lineas_materiales && datos.lineas_materiales.length > 0) {
                 const fMat = new Date().toLocaleString('es-ES');
@@ -146,24 +136,11 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwi8cCg4D0mG
 app.post('/api/test-email', async (req, res) => { const { emailDestino } = req.body; try { const payload = { to: emailDestino, subject: "🛠️ Prueba de conexión - ServiPlusUltra", html: `<div style="text-align: center;"><h2 style="color: #1abc9c;">¡El túnel secreto funciona! 🚀</h2></div>` }; await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }); res.json({ mensaje: 'Correo enviado con éxito. ¡Revisa tu bandeja de entrada! 😎' }); } catch (error) { res.status(500).json({ error: 'Fallo al enviar el correo por el puente.' }); } });
 app.post('/api/enviar-factura', async (req, res) => { const { emailDestino, asunto, htmlBody, pdfBase64, nombreArchivo } = req.body; try { const payload = { to: emailDestino, subject: asunto, html: htmlBody, adjuntoBase64: pdfBase64, adjuntoNombre: nombreArchivo }; await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }); res.json({ mensaje: 'Factura enviada con éxito al cliente por correo electrónico. 🚀' }); } catch (error) { res.status(500).json({ error: 'Fallo de conexión al enviar la factura.' }); } });
 
-// --- API GASTOS SOCIOS ---
 app.get('/api/gastos', async (req, res) => { if (req.headers['x-rol'] !== 'admin' && req.headers['x-rol'] !== 'director') return res.status(403).json({ error: 'Sin permisos' }); try { const r = await db.execute("SELECT * FROM gastos_socios ORDER BY id DESC"); res.json(r.rows); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/gastos', async (req, res) => { if (req.headers['x-rol'] !== 'admin' && req.headers['x-rol'] !== 'director') return res.status(403).json({ error: 'Sin permisos' }); const { pagador, concepto, importe, implicados } = req.body; const fecha = new Date().toLocaleString('es-ES'); const impStr = Array.isArray(implicados) ? implicados.join(',') : 'Giancarlo,David,Kevin'; try { await db.execute({ sql: `INSERT INTO gastos_socios (pagador, concepto, importe, fecha, implicados) VALUES (?, ?, ?, ?, ?)`, args: [pagador, concepto, parseFloat(importe), fecha, impStr] }); res.json({ mensaje: 'Gasto registrado correctamente.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.delete('/api/gastos/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin' && req.headers['x-rol'] !== 'director') return res.status(403).json({ error: 'Sin permisos' }); try { await db.execute({ sql: `DELETE FROM gastos_socios WHERE id = ?`, args: [req.params.id] }); res.json({ mensaje: 'Gasto eliminado.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-// 🔴 NUEVA API: STOCK DE MATERIALES 🔴
-app.get('/api/stock', async (req, res) => { 
-    try { const r = await db.execute("SELECT * FROM stock_materiales ORDER BY descripcion ASC"); res.json(r.rows); } 
-    catch (e) { res.status(500).json({ error: e.message }); } 
-});
-
-app.post('/api/stock', async (req, res) => { 
-    const { descripcion, cantidad, precio_unidad, imagen } = req.body;
-    const fecha = new Date().toLocaleString('es-ES');
-    try { 
-        await db.execute({ sql: `INSERT INTO stock_materiales (descripcion, cantidad, precio_unidad, imagen, fecha) VALUES (?, ?, ?, ?, ?)`, args: [descripcion, parseFloat(cantidad), parseFloat(precio_unidad), imagen || '', fecha] }); 
-        res.json({ mensaje: 'Material añadido al stock.' }); 
-    } catch (e) { res.status(500).json({ error: e.message }); } 
-});
+app.get('/api/stock', async (req, res) => { try { const r = await db.execute("SELECT * FROM stock_materiales ORDER BY descripcion ASC"); res.json(r.rows); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/stock', async (req, res) => { const { descripcion, cantidad, precio_unidad, imagen } = req.body; const fecha = new Date().toLocaleString('es-ES'); try { await db.execute({ sql: `INSERT INTO stock_materiales (descripcion, cantidad, precio_unidad, imagen, fecha) VALUES (?, ?, ?, ?, ?)`, args: [descripcion, parseFloat(cantidad), parseFloat(precio_unidad), imagen || '', fecha] }); res.json({ mensaje: 'Material añadido al stock.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
 app.listen(PORT, () => console.log(`🚀 Servidor listo en el puerto ${PORT}`));

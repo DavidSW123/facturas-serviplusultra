@@ -58,7 +58,6 @@
         .modal-content { background-color: #fff; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: #aaa; transition: 0.3s; z-index: 10; }
         
-        /* ESTILOS DE LÍNEAS DE MATERIAL DINÁMICO */
         .linea-mat { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; }
         .linea-mat .eliminar-linea { position: absolute; top: -10px; right: -10px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; }
         .grid-linea { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; align-items: end; }
@@ -104,6 +103,10 @@
         .gasto-item:last-child { border-bottom: none; }
         .bal-positivo { color: #27ae60; font-weight: bold; }
         .bal-negativo { color: #e74c3c; font-weight: bold; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .checkbox-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; }
+        .linea-desglose { padding: 8px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.95em; }
+        .linea-desglose:last-child { border-bottom: none; }
 
         @media screen and (max-width: 768px) {
             body { padding: 10px; } .container { padding: 15px; } .grid-2, .grid-linea { grid-template-columns: 1fr; gap: 10px; }
@@ -163,7 +166,6 @@
             </div>
             <div class="form-group"><label>Marca / Descripción</label><input type="text" id="marca" required></div>
             <div class="form-group"><label>Urgencia</label><select id="tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div>
-            
             <button type="submit" class="btn-save" id="btnGuardarMain">Guardar Orden de Trabajo</button>
         </form>
 
@@ -184,15 +186,10 @@
             <h2 id="menuNombre" style="margin: 0; color: #1abc9c;">Nombre</h2>
             <p id="menuRol" style="margin: 5px 0 0 0; color: #bdc3c7; text-transform: uppercase;"></p>
         </div>
-        
         <div class="menu-items">
             <button class="btn-side" style="background: #27ae60; font-size: 1.1em; font-weight: bold; margin-bottom: 20px;" onclick="abrirModuloStock()">📦 Stock de Materiales</button>
-
-            <div id="menuGastosArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
-                <button class="btn-side" style="background: #e67e22; font-size: 1.1em; font-weight: bold;" onclick="abrirGastosSocios()">💸 Control de Gastos (Socios)</button>
-            </div>
+            <div id="menuGastosArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;"><button class="btn-side" style="background: #e67e22; font-size: 1.1em; font-weight: bold;" onclick="abrirGastosSocios()">💸 Control de Gastos (Socios)</button></div>
             <button class="btn-side" style="background: #9b59b6; margin-bottom: 20px;" onclick="probarEnvioCorreo()">📧 Probar Envío de Correo</button>
-
             <div id="menuClientesArea" style="display: none; border-bottom: 1px solid #34495e; padding-bottom: 15px; margin-bottom: 15px;">
                 <h4 style="color: #95a5a6; margin-top: 0;">👥 CRM CLIENTES</h4>
                 <button class="btn-side" style="background: #3498db;" onclick="abrirModal('modalClientes'); renderizarBurbujasClientes();">🗂️ Ver Clientes</button>
@@ -221,13 +218,9 @@
         <div class="modal-content" style="max-width: 850px; background: #f4f7f6;">
             <h2 style="margin-top:0;">🛒 Materiales Utilizados</h2>
             <p style="color: #7f8c8d;">Añade los tickets o descuenta material de tu stock.</p>
-            
             <div id="contenedorLineasMat"></div>
-
             <button class="btn-secundario" style="width: 100%; border: 2px dashed #95a5a6; background: transparent; color: #333; padding: 15px; font-weight: bold;" onclick="addLineaMaterial()">+ Añadir nuevo material</button>
-
             <div style="text-align: right; margin-top: 20px; font-size: 1.2em;">Total Materiales: <strong id="totalMaterialesCalc">0.00</strong> €</div>
-
             <button class="btn-save" style="background-color: #27ae60;" onclick="guardarOTFinal(true)">✅ Finalizar y Guardar OT</button>
             <button class="btn-peligro" style="width: 100%; margin-top: 10px;" onclick="cerrarModal('modalLineasMateriales')">❌ Cancelar OT</button>
         </div>
@@ -237,20 +230,15 @@
         <div class="modal-content" style="max-width: 800px;">
             <span class="close-modal" onclick="cerrarModal('modalStock')">&times;</span>
             <h2 style="margin-top:0; color:#27ae60;">📦 Stock de Materiales</h2>
-            
             <div style="background: #e8f8f5; border: 1px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <h4 style="margin: 0 0 10px 0; color: #16a085;">Añadir al Almacén</h4>
                 <form id="formStock">
                     <div class="form-group"><label>Descripción del Material</label><input type="text" id="s_desc" placeholder="Ej: Cable cobre 1.5mm" required></div>
-                    <div class="grid-2">
-                        <div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="s_cant" required></div>
-                        <div class="form-group"><label>Precio Unidad (€)</label><input type="number" step="0.01" id="s_precio" required></div>
-                    </div>
+                    <div class="grid-2"><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="s_cant" required></div><div class="form-group"><label>Precio Unidad (€)</label><input type="number" step="0.01" id="s_precio" required></div></div>
                     <div class="form-group"><label>Foto del Ticket / Factura (Opcional)</label><input type="file" id="s_file" accept="image/*"></div>
                     <button type="submit" class="btn-save" style="margin-top: 0; padding: 10px; background: #27ae60;">Guardar en Stock</button>
                 </form>
             </div>
-
             <table class="tabla-logs" style="width: 100%;">
                 <thead><tr><th>Material</th><th>Unidades Disponibles</th><th>Precio/U</th><th>Tickets</th></tr></thead>
                 <tbody id="tablaStockBody"></tbody>
@@ -266,28 +254,42 @@
                 <button class="btn-save" style="background:#8e44ad; padding: 10px; width: auto; margin:0;" onclick="alert('Funcionalidad de escaneo por IA en desarrollo. ¡Próximamente!')">🤖 Añadir Ticket por IA</button>
             </div>
             <p style="color:#7f8c8d; font-size: 0.9em; margin-bottom: 20px;">OT: <strong id="t_codigo_ot" style="color:#2c3e50;"></strong></p>
-            
             <div style="background: #e8f8f5; border: 1px solid #1abc9c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <h4 style="margin: 0 0 10px 0; color: #16a085;">Subir ticket manual</h4>
-                <div class="grid-2">
-                    <div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div>
-                    <div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div>
-                </div>
+                <div class="grid-2"><div class="form-group"><label>Foto del ticket</label><input type="file" id="t_file" accept="image/*" capture="environment"></div><div class="form-group"><label>Coste (€) <small>- Se sumará a la OT</small></label><input type="number" step="0.01" id="t_importe" placeholder="0.00"></div></div>
                 <div class="form-group"><label>Descripción (Opcional)</label><input type="text" id="t_desc" placeholder="Ej: Recambio Leroy Merlin..."></div>
                 <button class="btn-save" style="margin-top: 0; padding: 10px;" onclick="subirTicketOT()">Subir Ticket Manual</button>
             </div>
-
             <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Galería de Tickets</h3>
             <div id="t_galeria" class="ticket-gallery"></div>
         </div>
     </div>
 
-    <div id="modalGastos" class="modal"><div class="modal-content" style="max-width: 700px; background-color: #fcfcfc;"><span class="close-modal" onclick="cerrarModal('modalGastos')">&times;</span><h2 style="margin-top:0;">💸 Cuentas Claras (Socios)</h2><div style="background: #fff; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><div style="display:flex; border-bottom: 2px solid #ddd; margin-bottom: 15px;"><div id="tabGasto" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #1abc9c; font-weight:bold; color:#1abc9c;" onclick="cambiarTabGastos('gasto')">🛒 Registrar Gasto Compartido</div><div id="tabPago" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;" onclick="cambiarTabGastos('pago')">💸 Pagar Deuda a un Socio</div></div><div id="panelGasto"><form id="formGastoSocio"><div class="grid-2"><div class="form-group"><label>¿Quién pagó el gasto?</label><select id="g_pagador" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div><div class="form-group"><label>Importe Total (€)</label><input type="number" step="0.01" id="g_importe" placeholder="Ej: 50.00" required></div></div><div class="form-group"><label>Concepto</label><input type="text" id="g_concepto" required></div><div class="form-group"><label>¿Para quiénes era este gasto?</label><div class="checkbox-group"><label><input type="checkbox" name="chk_implicados" value="Giancarlo" checked> Giancarlo</label><label><input type="checkbox" name="chk_implicados" value="David" checked> David</label><label><input type="checkbox" name="chk_implicados" value="Kevin" checked> Kevin</label></div></div><button type="submit" class="btn-save" style="margin-top: 0; padding: 10px;">Añadir Gasto</button></form></div><div id="panelPago" style="display:none;"><div style="background: #ebf5fb; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; border-left: 3px solid #3498db;">Usa esta pestaña exclusivamente cuando uno de vosotros le devuelva dinero a otro para saldar las deudas.</div><form id="formPagoSocio"><div class="grid-2"><div class="form-group"><label style="color:#e74c3c;">¿Quién está devolviendo el dinero?</label><select id="p_emisor" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div><div class="form-group"><label style="color:#27ae60;">¿A quién se lo está dando?</label><select id="p_receptor" required><option value="Kevin">Kevin</option><option value="Giancarlo">Giancarlo</option><option value="David">David</option></select></div></div><div class="form-group"><label>Importe devuelto (€)</label><input type="number" step="0.01" id="p_importe" required></div><button type="submit" class="btn-save" style="margin-top: 0; padding: 10px; background-color: #3498db;">Registrar Devolución de Dinero</button></form></div></div><div class="caja-deudas"><h3>⚖️ Ajuste de Cuentas</h3><div id="resumenDeudas">Cargando...</div><div style="margin-top: 15px; font-size: 0.9em; color: #7f8c8d; display: flex; justify-content: space-around; border-top: 1px solid #ccc; padding-top: 10px;" id="resumenBalances"></div></div><h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px;">📜 Historial de Movimientos</h3><div id="listaHistorialGastos" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius: 8px; border: 1px solid #eee;"></div></div></div>
+    <div id="modalEditarCliente" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal('modalEditarCliente')">&times;</span>
+            <h2 style="margin-top:0; color:#3498db;">✏️ Editar Datos del Cliente</h2>
+            <form id="formEditarCliente">
+                <input type="hidden" id="edit_c_id">
+                <div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="edit_c_nombre" required></div>
+                <div class="form-group"><label>NIF / CIF</label><input type="text" id="edit_c_nif" required></div>
+                <div class="form-group"><label>Dirección Fiscal</label><input type="text" id="edit_c_direccion" required></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Teléfono</label><input type="text" id="edit_c_telefono"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="edit_c_email"></div>
+                </div>
+                <div class="form-group"><label>Actualizar Logotipo (Déjalo vacío para mantener el actual)</label><input type="file" id="edit_c_logo_file" accept="image/*"></div>
+                <button type="submit" class="btn-save" style="background-color: #3498db;">💾 Guardar Cambios del Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalGastos" class="modal"><div class="modal-content" style="max-width: 700px; background-color: #fcfcfc;"><span class="close-modal" onclick="cerrarModal('modalGastos')">&times;</span><h2 style="margin-top:0;">💸 Cuentas Claras (Socios)</h2><div style="background: #fff; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><div style="display:flex; border-bottom: 2px solid #ddd; margin-bottom: 15px;"><div id="tabGasto" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #1abc9c; font-weight:bold; color:#1abc9c;" onclick="cambiarTabGastos('gasto')">🛒 Registrar Gasto Compartido</div><div id="tabPago" style="flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;" onclick="cambiarTabGastos('pago')">💸 Pagar Deuda a un Socio</div></div><div id="panelGasto"><form id="formGastoSocio"><div class="grid-2"><div class="form-group"><label>¿Quién pagó el gasto?</label><select id="g_pagador" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div><div class="form-group"><label>Importe Total (€)</label><input type="number" step="0.01" id="g_importe" required></div></div><div class="form-group"><label>Concepto</label><input type="text" id="g_concepto" required></div><div class="form-group"><label>¿Para quiénes era este gasto?</label><div class="checkbox-group"><label><input type="checkbox" name="chk_implicados" value="Giancarlo" checked> Giancarlo</label><label><input type="checkbox" name="chk_implicados" value="David" checked> David</label><label><input type="checkbox" name="chk_implicados" value="Kevin" checked> Kevin</label></div></div><button type="submit" class="btn-save" style="margin-top: 0; padding: 10px;">Añadir Gasto</button></form></div><div id="panelPago" style="display:none;"><div style="background: #ebf5fb; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; border-left: 3px solid #3498db;">Usa esta pestaña exclusivamente cuando uno de vosotros le devuelva dinero a otro para saldar las deudas.</div><form id="formPagoSocio"><div class="grid-2"><div class="form-group"><label style="color:#e74c3c;">¿Quién está devolviendo el dinero?</label><select id="p_emisor" required><option value="Giancarlo">Giancarlo</option><option value="David">David</option><option value="Kevin">Kevin</option></select></div><div class="form-group"><label style="color:#27ae60;">¿A quién se lo está dando?</label><select id="p_receptor" required><option value="Kevin">Kevin</option><option value="Giancarlo">Giancarlo</option><option value="David">David</option></select></div></div><div class="form-group"><label>Importe devuelto (€)</label><input type="number" step="0.01" id="p_importe" required></div><button type="submit" class="btn-save" style="margin-top: 0; padding: 10px; background-color: #3498db;">Registrar Devolución de Dinero</button></form></div></div><div class="caja-deudas"><h3>⚖️ Ajuste de Cuentas</h3><div id="resumenDeudas">Cargando...</div><div style="margin-top: 15px; font-size: 0.9em; color: #7f8c8d; display: flex; justify-content: space-around; border-top: 1px solid #ccc; padding-top: 10px;" id="resumenBalances"></div></div><h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 30px;">📜 Historial de Movimientos</h3><div id="listaHistorialGastos" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius: 8px; border: 1px solid #eee;"></div></div></div>
     <div id="modalDesgloseSplitwise" class="modal" style="z-index: 5000; background: rgba(0,0,0,0.8);"><div class="modal-content" style="max-width: 500px; padding: 20px;"><span class="close-modal" onclick="cerrarModal('modalDesgloseSplitwise')">&times;</span><h3 style="margin-top:0; border-bottom: 2px solid #1abc9c; padding-bottom: 10px;">🔍 Desglose de <span id="desgloseNombre"></span></h3><div style="text-align: center; margin-bottom: 15px; font-size: 1.2em;">Balance Final: <strong id="desgloseTotal"></strong></div><div id="desgloseOperaciones" style="max-height: 400px; overflow-y: auto; background: #f8f9fa; border: 1px solid #ccc; border-radius: 5px;"></div></div></div>
-    <div id="modalEditarOT" class="modal"><div class="modal-content" style="max-width: 600px;"><span class="close-modal" onclick="cerrarModal('modalEditarOT')">&times;</span><h2 style="margin-top:0; color:#f39c12;">✏️ Editar Orden de Trabajo</h2><form id="formEditarOTDirecto"><div class="grid-2"><div class="form-group"><label>Código de OT</label><input type="text" id="ed_codigo_ot" required></div><div class="form-group"><label>Cliente</label><select id="ed_ot_cliente_id"><option value="">-- Sin asignar --</option></select></div></div><div class="grid-2"><div class="form-group"><label>Fecha encargo</label><input type="datetime-local" id="ed_fecha_encargo" required></div><div class="form-group"><label>Finalización</label><input type="datetime-local" id="ed_fecha_completada"></div></div><div class="grid-2"><div class="form-group"><label>Horas</label><input type="number" step="0.1" id="ed_horas" required></div><div class="form-group"><label>Técnicos</label><div style="display:flex; gap:10px;"><select id="ed_selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding:10px;" onclick="agregarEdTecnicoOT()">Añadir</button></div><div id="ed_listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div></div></div><div class="form-group"><label>Marca</label><input type="text" id="ed_marca" required></div><div class="grid-2"><div class="form-group"><label>Urgencia</label><select id="ed_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div><div class="form-group"><label>Materiales (€) (Modificar manual si no usas líneas)</label><input type="number" step="0.01" id="ed_materiales_precio" required></div></div><button type="button" class="btn-save" style="background-color: #f39c12;" onclick="guardarEdicionOT()">💾 Sobrescribir Cambios</button></form></div></div>
+    <div id="modalEditarOT" class="modal"><div class="modal-content" style="max-width: 600px;"><span class="close-modal" onclick="cerrarModal('modalEditarOT')">&times;</span><h2 style="margin-top:0; color:#f39c12;">✏️ Editar Orden de Trabajo</h2><form id="formEditarOTDirecto"><div class="grid-2"><div class="form-group"><label>Código de OT</label><input type="text" id="ed_codigo_ot" required></div><div class="form-group"><label>Cliente</label><select id="ed_ot_cliente_id"><option value="">-- Sin asignar --</option></select></div></div><div class="grid-2"><div class="form-group"><label>Fecha encargo</label><input type="datetime-local" id="ed_fecha_encargo" required></div><div class="form-group"><label>Finalización</label><input type="datetime-local" id="ed_fecha_completada"></div></div><div class="grid-2"><div class="form-group"><label>Horas</label><input type="number" step="0.1" id="ed_horas" required></div><div class="form-group"><label>Técnicos</label><div style="display:flex; gap:10px;"><select id="ed_selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding:10px;" onclick="agregarEdTecnicoOT()">Añadir</button></div><div id="ed_listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div></div></div><div class="form-group"><label>Marca</label><input type="text" id="ed_marca" required></div><div class="grid-2"><div class="form-group"><label>Urgencia</label><select id="ed_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div><div class="form-group"><label>Materiales (€) (Manual)</label><input type="number" step="0.01" id="ed_materiales_precio" required></div></div><button type="button" class="btn-save" style="background-color: #f39c12;" onclick="guardarEdicionOT()">💾 Sobrescribir Cambios</button></form></div></div>
     <div id="modalClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalClientes')">&times;</span><h2>👥 Cartera de Clientes</h2><div id="gridClientes" class="clientes-grid"></div></div></div>
     <div id="modalCrearCliente" class="modal"><div class="modal-content"><span class="close-modal" onclick="cerrarModal('modalCrearCliente')">&times;</span><h2>🏢 Registrar Nuevo Cliente</h2><form id="formCliente"><div class="form-group"><label>Nombre Empresa / Cliente</label><input type="text" id="c_nombre" required></div><div class="form-group"><label>NIF / CIF</label><input type="text" id="c_nif" required></div><div class="form-group"><label>Dirección Fiscal</label><input type="text" id="c_direccion" required></div><div class="grid-2"><div class="form-group"><label>Teléfono</label><input type="text" id="c_telefono"></div><div class="form-group"><label>Email</label><input type="email" id="c_email"></div></div><div class="form-group"><label>Logotipo (Opcional)</label><input type="file" id="c_logo_file" accept="image/*"></div><button type="submit" class="btn-save" id="btnGuardarCliente">Guardar Cliente</button></form></div></div>
-    <div id="modalDetalleCliente" class="modal"><div class="modal-content" style="max-width: 700px;"><span class="close-modal" onclick="cerrarModal('modalDetalleCliente')">&times;</span><div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px;"><img id="d_c_logo" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c;"><h2 id="d_c_nombre" style="margin: 10px 0 0 0;"></h2></div><div class="cliente-detalle-box"><p><strong>NIF/CIF:</strong> <span id="d_c_nif"></span></p><p><strong>Dirección:</strong> <span id="d_c_direccion"></span></p><p><strong>Contacto:</strong> <span id="d_c_tel"></span> | <span id="d_c_email"></span></p></div><h3>🛠️ Historial de OTs</h3><div id="d_c_ots" style="max-height: 300px; overflow-y: auto;"></div></div></div>
+    <div id="modalDetalleCliente" class="modal"><div class="modal-content" style="max-width: 700px;"><span class="close-modal" onclick="cerrarModal('modalDetalleCliente')">&times;</span><div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px;"><img id="d_c_logo" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1abc9c;"><h2 id="d_c_nombre" style="margin: 10px 0 0 0;"></h2><div id="d_c_acciones" style="margin-top: 10px;"></div></div><div class="cliente-detalle-box"><p><strong>NIF/CIF:</strong> <span id="d_c_nif"></span></p><p><strong>Dirección:</strong> <span id="d_c_direccion"></span></p><p><strong>Contacto:</strong> <span id="d_c_tel"></span> | <span id="d_c_email"></span></p></div><h3>🛠️ Historial de OTs</h3><div id="d_c_ots" style="max-height: 300px; overflow-y: auto;"></div></div></div>
     <div id="modalSolicitudesClientes" class="modal"><div class="modal-content" style="max-width: 800px;"><span class="close-modal" onclick="cerrarModal('modalSolicitudesClientes')">&times;</span><h2>🔔 Solicitudes de Clientes</h2><table class="tabla-logs"><thead><tr><th>Cliente</th><th>NIF</th><th>Añadido por</th><th>Acción</th></tr></thead><tbody id="tbodySolicitudesClientes"></tbody></table></div></div>
     <div id="modalFactura" class="modal"><div class="modal-content modal-content-folio" id="facturaAreaImpresion"><span class="close-modal no-print" onclick="cerrarModal('modalFactura')">&times;</span><div class="factura-header"><div class="datos-empresa"><img src="/logo.png" style="max-width: 240px; margin-bottom: 10px;" onerror="this.style.display='none'"><h3>ServiPlusUltra Solutions S.L.</h3><p>B-26892760</p><p>Carrer d'Aribau 168, 1-1, 08036 BCN</p></div><div class="datos-factura"><h2>FACTURA</h2><p><strong>Ref:</strong> <span id="factOtCode"></span></p><p><strong>Fecha:</strong> <span id="factFechaHoy"></span></p><div class="caja-cliente-fact"><strong>Facturar a:</strong><select id="selClienteFactura" class="no-print" onchange="actualizarInfoClienteFactura()" style="width:100%; padding:8px; margin-top:5px;"></select><div id="printClienteNombre" class="only-print" style="font-weight:bold; font-size:1.1em;"></div><div id="infoClienteFacturaTexto" style="font-size:0.9em; margin-top:5px;"></div></div></div></div><table class="tabla-holded" id="tablaLineasFactura"><thead><tr><th style="width: 50%;">Concepto</th><th>Cant.</th><th>Precio/U (€)</th><th style="text-align: right;">Total</th><th style="width: 5%;" class="no-print"></th></tr></thead><tbody id="tbodyLineas"></tbody></table><button class="btn-secundario no-print" onclick="agregarLineaBlanco()" style="margin-top: 15px;">+ Añadir línea</button><div style="display:flex; justify-content:flex-end; margin-top:30px;"><div class="totales-caja"><p>Base: <strong><span id="factBase">0.00</span> €</strong></p><p>IVA (21%): <strong><span id="factIva">0.00</span> €</strong></p><h3>Total: <span id="factTotal">0.00</span> €</h3></div></div><div style="display: flex; gap: 15px; margin-top: 40px;" class="no-print"><button class="btn-secundario" style="flex-grow: 1; padding: 15px; font-size: 16px;" onclick="window.print()">🖨️ Imprimir PDF Local</button><button class="btn-save" style="flex-grow: 1; margin-top: 0; background-color: #9b59b6;" onclick="enviarFacturaAlCliente()">📧 Enviar Factura por Email</button></div></div></div>
     <div id="modalEditarLog" class="modal"><div class="modal-content" style="max-width: 600px;"><span class="close-modal" onclick="cerrarModal('modalEditarLog')">&times;</span><h2 style="margin-top:0;">✏️ Editar Petición</h2><form id="formEditarLog"><input type="hidden" id="editLogId"><div class="form-group"><label>Código de OT</label><input type="text" id="e_codigo_ot" required></div><div class="grid-2"><div class="form-group"><label>Fecha encargo</label><input type="datetime-local" id="e_fecha_encargo" required></div><div class="form-group"><label>Finalización</label><input type="datetime-local" id="e_fecha_completada"></div></div><div class="grid-2"><div class="form-group"><label>Horas</label><input type="number" step="0.1" id="e_horas" required></div><div class="form-group"><label>Técnicos</label><div style="display:flex; gap:10px;"><select id="e_selTecnicosAdd" style="flex-grow:1;"><option value="">-- Seleccionar --</option></select><button type="button" class="btn-secundario" style="margin:0; padding:10px;" onclick="agregarETecnicoOT()">Añadir</button></div><div id="e_listaTecnicosOT" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"></div></div></div><div class="form-group"><label>Marca</label><input type="text" id="e_marca" required></div><div class="grid-2"><div class="form-group"><label>Urgencia</label><select id="e_tipo_urgencia"><option value="Verde">🟢 Verde</option><option value="Amarillo">🟡 Amarillo</option><option value="Rojo">🔴 Rojo</option></select></div><div class="form-group"><label>Materiales (€)</label><input type="number" step="0.01" id="e_materiales_precio" required></div></div><button type="button" class="btn-save" onclick="guardarEdicionLog()">Guardar Cambios</button></form></div></div>
@@ -303,10 +305,8 @@
         const imgClienteDef = "https://cdn-icons-png.flaticon.com/512/3135/3135768.png";
         
         let otsGlobal = [], logsGlobal = [], clientesGlobal = [], lineasFactura = [];
-        let stockGlobal = []; // 🔴 Array de stock
-        let arrayLineasMat = []; // 🔴 Array dinámico para las líneas de la nueva OT
-        let counterLineas = 0;
-
+        let stockGlobal = [];
+        let arrayLineasMat = []; let counterLineas = 0;
         let otActualId = null, otActualCodigo = '';
         let tecnicosSeleccionados = [], e_tecnicosSeleccionados = [], ed_tecnicosSeleccionados = [];
         const headersSeguridad = { 'Content-Type': 'application/json', 'x-rol': sesion.rol, 'x-user': sesion.username };
@@ -330,12 +330,11 @@
             if (sesion.rol === 'admin') document.getElementById('menuSolicitudesArea').innerHTML = `<button class="btn-side" style="background: #e67e22;" onclick="abrirSolicitudesClientes()">🔔 Solicitudes Nuevos Clientes</button>`;
             if (sesion.rol === 'director') { document.getElementById('btnGuardarMain').innerText = "Enviar OT a Revisión (Standby)"; document.getElementById('btnGuardarCliente').innerText = "Enviar Cliente a Revisión"; }
             cargarUsuariosParaOT();
-            cargarStock(); // Cargar stock en background
+            cargarStock();
         }
 
         function comprimirImagen(file, callback) { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); callback(canvas.toDataURL('image/jpeg', 0.6)); }; }; }
 
-        // 🔴 1. LÓGICA DE CREACIÓN DE OT CON MATERIALES 🔴
         function preguntarMateriales(e) {
             e.preventDefault();
             if (tecnicosSeleccionados.length === 0) { alert("❌ Debes asignar al menos a un técnico."); return; }
@@ -343,250 +342,106 @@
             const fechaEn = document.getElementById('fecha_encargo').value;
             const fechaCo = document.getElementById('fecha_completada').value;
             if (!validarFormulario(codigo, fechaEn, fechaCo)) return;
-            
             abrirModal('modalPreguntaMateriales');
         }
 
-        function abrirEditorMateriales() {
-            cerrarModal('modalPreguntaMateriales');
-            arrayLineasMat = [];
-            document.getElementById('contenedorLineasMat').innerHTML = '';
-            document.getElementById('totalMaterialesCalc').innerText = '0.00';
-            addLineaMaterial(); // Agrega la primera por defecto
-            abrirModal('modalLineasMateriales');
-        }
-
-        function addLineaMaterial() {
-            const idLinea = counterLineas++;
-            arrayLineasMat.push({ id: idLinea, is_stock: false, stock_id: '', descripcion: '', cantidad: 1, precio: 0, importe: 0, imagen: '' });
-            renderizarLineasMateriales();
-        }
-
-        function borrarLineaMaterial(id) {
-            arrayLineasMat = arrayLineasMat.filter(l => l.id !== id);
-            renderizarLineasMateriales();
-        }
-
-        function onChangeLinea(id, campo, valor) {
-            let linea = arrayLineasMat.find(l => l.id === id);
-            if (!linea) return;
-            
-            if (campo === 'is_stock') {
-                linea.is_stock = valor;
-                linea.descripcion = ''; linea.stock_id = ''; linea.precio = 0; linea.imagen = '';
-            } else if (campo === 'stock_id') {
-                linea.stock_id = valor;
-                let sItem = stockGlobal.find(s => s.id == valor);
-                if(sItem) { linea.descripcion = sItem.descripcion; linea.precio = sItem.precio_unidad; }
-            } else {
-                linea[campo] = (campo==='cantidad'||campo==='precio') ? parseFloat(valor)||0 : valor;
-            }
-            
-            linea.importe = linea.cantidad * linea.precio;
-            
-            // Recalcular total abajo
-            let total = arrayLineasMat.reduce((acc, curr) => acc + curr.importe, 0);
-            document.getElementById('totalMaterialesCalc').innerText = total.toFixed(2);
-            
-            // Solo re-renderizamos si cambió stock_id o is_stock para no perder el foco del teclado
-            if(campo === 'is_stock' || campo === 'stock_id') renderizarLineasMateriales();
-        }
-
-        function handleFileSelect(id, fileInput) {
-            if(!fileInput.files[0]) return;
-            comprimirImagen(fileInput.files[0], (b64) => {
-                let linea = arrayLineasMat.find(l => l.id === id);
-                if(linea) { linea.imagen = b64; alert('✅ Foto guardada en la línea'); }
-            });
-        }
+        function abrirEditorMateriales() { cerrarModal('modalPreguntaMateriales'); arrayLineasMat = []; document.getElementById('contenedorLineasMat').innerHTML = ''; document.getElementById('totalMaterialesCalc').innerText = '0.00'; addLineaMaterial(); abrirModal('modalLineasMateriales'); }
+        function addLineaMaterial() { const idLinea = counterLineas++; arrayLineasMat.push({ id: idLinea, is_stock: false, stock_id: '', descripcion: '', cantidad: 1, precio: 0, importe: 0, imagen: '' }); renderizarLineasMateriales(); }
+        function borrarLineaMaterial(id) { arrayLineasMat = arrayLineasMat.filter(l => l.id !== id); renderizarLineasMateriales(); }
+        function onChangeLinea(id, campo, valor) { let linea = arrayLineasMat.find(l => l.id === id); if (!linea) return; if (campo === 'is_stock') { linea.is_stock = valor; linea.descripcion = ''; linea.stock_id = ''; linea.precio = 0; linea.imagen = ''; } else if (campo === 'stock_id') { linea.stock_id = valor; let sItem = stockGlobal.find(s => s.id == valor); if(sItem) { linea.descripcion = sItem.descripcion; linea.precio = sItem.precio_unidad; } } else { linea[campo] = (campo==='cantidad'||campo==='precio') ? parseFloat(valor)||0 : valor; } linea.importe = linea.cantidad * linea.precio; let total = arrayLineasMat.reduce((acc, curr) => acc + curr.importe, 0); document.getElementById('totalMaterialesCalc').innerText = total.toFixed(2); if(campo === 'is_stock' || campo === 'stock_id') renderizarLineasMateriales(); }
+        function handleFileSelect(id, fileInput) { if(!fileInput.files[0]) return; comprimirImagen(fileInput.files[0], (b64) => { let linea = arrayLineasMat.find(l => l.id === id); if(linea) { linea.imagen = b64; alert('✅ Foto guardada en la línea'); } }); }
 
         function renderizarLineasMateriales() {
-            const cont = document.getElementById('contenedorLineasMat');
-            cont.innerHTML = '';
-            
+            const cont = document.getElementById('contenedorLineasMat'); cont.innerHTML = '';
             arrayLineasMat.forEach(l => {
-                // Selector de stock
                 let opcionesStock = '<option value="">-- Elige del almacén --</option>';
                 stockGlobal.forEach(s => { if(s.cantidad > 0) opcionesStock += `<option value="${s.id}">${s.descripcion} (${s.cantidad} disp.)</option>`; });
-
-                // Vistas dinámicas
-                let htmlDesc = l.is_stock 
-                    ? `<select onchange="onChangeLinea(${l.id}, 'stock_id', this.value)" required>${opcionesStock}</select>`
-                    : `<input type="text" placeholder="Ej: Rollo Cable..." value="${l.descripcion}" oninput="onChangeLinea(${l.id}, 'descripcion', this.value)" required>`;
-                
-                let htmlFoto = l.is_stock 
-                    ? `<small style="color:#27ae60; font-weight:bold;">Stock descontado auto.</small>`
-                    : `<input type="file" accept="image/*" capture="environment" onchange="handleFileSelect(${l.id}, this)">`;
-
-                cont.innerHTML += `
-                <div class="linea-mat">
-                    <button class="eliminar-linea" onclick="borrarLineaMaterial(${l.id})">X</button>
-                    <div style="margin-bottom: 10px;">
-                        <label style="display:inline-flex; align-items:center; gap:5px; font-weight:normal; cursor:pointer;">
-                            <input type="checkbox" ${l.is_stock?'checked':''} onchange="onChangeLinea(${l.id}, 'is_stock', this.checked)"> Usar material existente del Stock
-                        </label>
-                    </div>
-                    <div class="grid-linea">
-                        <div><label>Descripción</label>${htmlDesc}</div>
-                        <div><label>Cant.</label><input type="number" step="0.01" value="${l.cantidad}" oninput="onChangeLinea(${l.id}, 'cantidad', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.precio}).toFixed(2)" required></div>
-                        <div><label>Precio/U (€)</label><input type="number" step="0.01" value="${l.precio}" ${l.is_stock?'readonly':''} oninput="onChangeLinea(${l.id}, 'precio', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.cantidad}).toFixed(2)" required></div>
-                        <div><label>Total (€)</label><strong id="tot_${l.id}">${l.importe.toFixed(2)}</strong></div>
-                    </div>
-                    <div style="margin-top: 10px;">${htmlFoto}</div>
-                </div>`;
-                
-                // Si es stock y ya tenía id, seleccionarlo
-                if(l.is_stock && l.stock_id) {
-                    setTimeout(() => {
-                        let selects = cont.querySelectorAll('select');
-                        selects[selects.length-1].value = l.stock_id;
-                    }, 10);
-                }
+                let htmlDesc = l.is_stock ? `<select onchange="onChangeLinea(${l.id}, 'stock_id', this.value)" required>${opcionesStock}</select>` : `<input type="text" placeholder="Ej: Rollo Cable..." value="${l.descripcion}" oninput="onChangeLinea(${l.id}, 'descripcion', this.value)" required>`;
+                let htmlFoto = l.is_stock ? `<small style="color:#27ae60; font-weight:bold;">Stock descontado auto.</small>` : `<input type="file" accept="image/*" capture="environment" onchange="handleFileSelect(${l.id}, this)">`;
+                cont.innerHTML += `<div class="linea-mat"><button class="eliminar-linea" onclick="borrarLineaMaterial(${l.id})">X</button><div style="margin-bottom: 10px;"><label style="display:inline-flex; align-items:center; gap:5px; font-weight:normal; cursor:pointer;"><input type="checkbox" ${l.is_stock?'checked':''} onchange="onChangeLinea(${l.id}, 'is_stock', this.checked)"> Usar material existente del Stock</label></div><div class="grid-linea"><div><label>Descripción</label>${htmlDesc}</div><div><label>Cant.</label><input type="number" step="0.01" value="${l.cantidad}" oninput="onChangeLinea(${l.id}, 'cantidad', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.precio}).toFixed(2)" required></div><div><label>Precio/U (€)</label><input type="number" step="0.01" value="${l.precio}" ${l.is_stock?'readonly':''} oninput="onChangeLinea(${l.id}, 'precio', this.value); document.getElementById('tot_${l.id}').innerText = (this.value*${l.cantidad}).toFixed(2)" required></div><div><label>Total (€)</label><strong id="tot_${l.id}">${l.importe.toFixed(2)}</strong></div></div><div style="margin-top: 10px;">${htmlFoto}</div></div>`;
+                if(l.is_stock && l.stock_id) { setTimeout(() => { let selects = cont.querySelectorAll('select'); selects[selects.length-1].value = l.stock_id; }, 10); }
             });
         }
 
-        // GUARDAR OT DEFINITIVO (CON O SIN MATERIALES)
         function guardarOTFinal(tieneMateriales) {
-            // Si dijo que sí, validamos que haya líneas
             if (tieneMateriales) {
                 if (arrayLineasMat.length === 0) { alert("❌ No hay líneas de materiales."); return; }
-                // Validar campos vacíos
                 for (let l of arrayLineasMat) {
                     if (l.is_stock && !l.stock_id) { alert("❌ Elige un material del stock."); return; }
                     if (!l.is_stock && !l.descripcion) { alert("❌ Pon descripción en las líneas."); return; }
                 }
-            } else {
-                arrayLineasMat = []; // Por si acaso
-                cerrarModal('modalPreguntaMateriales');
+            } else { arrayLineasMat = []; cerrarModal('modalPreguntaMateriales'); }
+            const datos = { codigo_ot: document.getElementById('codigo_ot').value, fecha_encargo: document.getElementById('fecha_encargo').value, fecha_completada: document.getElementById('fecha_completada').value, horas: parseFloat(document.getElementById('horas').value), num_tecnicos: tecnicosSeleccionados.length, tecnicos_nombres: tecnicosSeleccionados.join(', '), marca: document.getElementById('marca').value, tipo_urgencia: document.getElementById('tipo_urgencia').value, cliente_id: document.getElementById('ot_cliente_id').value || null, lineas_materiales: arrayLineasMat };
+            fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("ℹ️ " + data.mensaje); document.getElementById('formOT').reset(); tecnicosSeleccionados=[]; renderizarTecnicosOT(); if(tieneMateriales) cerrarModal('modalLineasMateriales'); cargarOTs(); cargarStock(); } });
+        }
+
+        function cargarStock() { fetch('/api/stock').then(res => res.json()).then(data => { stockGlobal = data; const tbody = document.getElementById('tablaStockBody'); if(tbody) { tbody.innerHTML = ''; if(data.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">El almacén está vacío.</td></tr>'; data.forEach(s => { let icon = s.imagen ? `<a href="${s.imagen}" target="_blank" title="Ver Ticket">📄</a>` : '-'; let rowClass = s.cantidad <= 0 ? 'background:#fdedec; color:#e74c3c;' : ''; tbody.innerHTML += `<tr style="${rowClass}"><td><strong>${s.descripcion}</strong></td><td>${s.cantidad} uds</td><td>${s.precio_unidad.toFixed(2)} €</td><td style="text-align:center; font-size:1.2em;">${icon}</td></tr>`; }); } }); }
+        function abrirModuloStock() { cargarStock(); abrirModal('modalStock'); }
+        document.getElementById('formStock').addEventListener('submit', function(e) { e.preventDefault(); const desc = document.getElementById('s_desc').value; const cant = document.getElementById('s_cant').value; const precio = document.getElementById('s_precio').value; const file = document.getElementById('s_file').files[0]; const enviar = (imgB64) => { fetch('/api/stock', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ descripcion: desc, cantidad: cant, precio_unidad: precio, imagen: imgB64 }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); document.getElementById('formStock').reset(); cargarStock(); } }); }; if(file) comprimirImagen(file, enviar); else enviar(''); });
+
+        // 🔴 EDICIÓN DE CLIENTES 🔴
+        function cargarClientes() { fetch('/api/clientes').then(res => res.json()).then(data => { clientesGlobal = data; const cAprobados = data.filter(c => c.estado === 'APROBADO'); const selOt = document.getElementById('ot_cliente_id'); selOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Seleccionar Cliente --</option>'; const selEdOt = document.getElementById('ed_ot_cliente_id'); if(selEdOt) selEdOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; cAprobados.forEach(c => { selOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; if(selEdOt) selEdOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; }); }); }
+        function renderizarBurbujasClientes() { const grid = document.getElementById('gridClientes'); grid.innerHTML = ''; const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO'); if(aprobados.length === 0) grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Aún no hay clientes.</p>'; aprobados.forEach(c => grid.innerHTML += `<div class="cliente-bubble" onclick="abrirDetalleCliente(${c.id})"><img src="${c.logo || imgClienteDef}" class="bubble-img"><div class="bubble-name">${c.nombre}</div></div>`); }
+        
+        function abrirDetalleCliente(id) { 
+            const c = clientesGlobal.find(x => x.id === id); 
+            document.getElementById('d_c_logo').src = c.logo || imgClienteDef; 
+            document.getElementById('d_c_nombre').innerText = c.nombre; 
+            document.getElementById('d_c_nif').innerText = c.nif; 
+            document.getElementById('d_c_direccion').innerText = c.direccion; 
+            document.getElementById('d_c_tel').innerText = c.telefono || '-'; 
+            document.getElementById('d_c_email').innerText = c.email || '-'; 
+            
+            // Botón de editar (solo admin)
+            const divAcciones = document.getElementById('d_c_acciones');
+            divAcciones.innerHTML = '';
+            if (sesion.rol === 'admin') {
+                divAcciones.innerHTML = `<button class="btn-editar" onclick="abrirModalEditarCliente(${id})">✏️ Editar Datos</button>`;
             }
 
-            const datos = {
-                codigo_ot: document.getElementById('codigo_ot').value,
-                fecha_encargo: document.getElementById('fecha_encargo').value,
-                fecha_completada: document.getElementById('fecha_completada').value,
-                horas: parseFloat(document.getElementById('horas').value),
-                num_tecnicos: tecnicosSeleccionados.length,
-                tecnicos_nombres: tecnicosSeleccionados.join(', '),
-                marca: document.getElementById('marca').value,
-                tipo_urgencia: document.getElementById('tipo_urgencia').value,
-                cliente_id: document.getElementById('ot_cliente_id').value || null,
-                lineas_materiales: arrayLineasMat
-            };
-
-            fetch('/api/ot', { method: 'POST', headers: headersSeguridad, body: JSON.stringify(datos) })
-            .then(res => res.json()).then(data => {
-                if(data.error) alert("❌ " + data.error);
-                else {
-                    alert("ℹ️ " + data.mensaje);
-                    document.getElementById('formOT').reset();
-                    tecnicosSeleccionados=[]; renderizarTecnicosOT();
-                    if(tieneMateriales) cerrarModal('modalLineasMateriales');
-                    cargarOTs();
-                    cargarStock(); // Recargar stock por si restamos
-                }
-            });
+            const ots = otsGlobal.filter(ot => ot.cliente_id === id); const divOts = document.getElementById('d_c_ots'); divOts.innerHTML = ''; if(ots.length === 0) divOts.innerHTML = '<p>No hay OTs para este cliente.</p>'; ots.forEach(ot => { let color = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'PENDIENTE' ? '#f39c12' : '#e74c3c'); divOts.innerHTML += `<div style="border-left: 4px solid ${color}; padding: 10px; background: #fff; margin-bottom: 8px;"><strong>${ot.codigo_ot}</strong> - ${ot.marca} <span style="float:right; color:${color};">${ot.estado}</span></div>`; }); cerrarModal('modalClientes'); abrirModal('modalDetalleCliente'); 
         }
 
-        // 🔴 2. LÓGICA DE STOCK (MÓDULO NUEVO) 🔴
-        function cargarStock() {
-            fetch('/api/stock').then(res => res.json()).then(data => {
-                stockGlobal = data;
-                const tbody = document.getElementById('tablaStockBody');
-                if(tbody) {
-                    tbody.innerHTML = '';
-                    if(data.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">El almacén está vacío.</td></tr>';
-                    data.forEach(s => {
-                        let icon = s.imagen ? `<a href="${s.imagen}" target="_blank" title="Ver Ticket">📄</a>` : '-';
-                        let rowClass = s.cantidad <= 0 ? 'background:#fdedec; color:#e74c3c;' : '';
-                        tbody.innerHTML += `<tr style="${rowClass}"><td><strong>${s.descripcion}</strong></td><td>${s.cantidad} uds</td><td>${s.precio_unidad.toFixed(2)} €</td><td style="text-align:center; font-size:1.2em;">${icon}</td></tr>`;
-                    });
-                }
-            });
+        function abrirModalEditarCliente(id) {
+            const c = clientesGlobal.find(x => x.id === id);
+            document.getElementById('edit_c_id').value = c.id;
+            document.getElementById('edit_c_nombre').value = c.nombre;
+            document.getElementById('edit_c_nif').value = c.nif;
+            document.getElementById('edit_c_direccion').value = c.direccion;
+            document.getElementById('edit_c_telefono').value = c.telefono || '';
+            document.getElementById('edit_c_email').value = c.email || '';
+            cerrarModal('modalDetalleCliente');
+            abrirModal('modalEditarCliente');
         }
 
-        function abrirModuloStock() { cargarStock(); abrirModal('modalStock'); }
-
-        document.getElementById('formStock').addEventListener('submit', function(e) {
+        document.getElementById('formEditarCliente').addEventListener('submit', function(e) {
             e.preventDefault();
-            const desc = document.getElementById('s_desc').value;
-            const cant = document.getElementById('s_cant').value;
-            const precio = document.getElementById('s_precio').value;
-            const file = document.getElementById('s_file').files[0];
-
-            const enviar = (imgB64) => {
-                fetch('/api/stock', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ descripcion: desc, cantidad: cant, precio_unidad: precio, imagen: imgB64 }) })
-                .then(r => r.json()).then(d => {
+            const id = document.getElementById('edit_c_id').value;
+            const file = document.getElementById('edit_c_logo_file').files[0];
+            
+            const enviar = (logoB64) => {
+                const payload = {
+                    nombre: document.getElementById('edit_c_nombre').value,
+                    nif: document.getElementById('edit_c_nif').value,
+                    direccion: document.getElementById('edit_c_direccion').value,
+                    email: document.getElementById('edit_c_email').value,
+                    telefono: document.getElementById('edit_c_telefono').value,
+                    logo: logoB64 || clientesGlobal.find(x => x.id == id).logo // Mantiene logo si no se sube uno nuevo
+                };
+                fetch(`/api/clientes/${id}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify(payload) })
+                .then(res => res.json()).then(d => { 
                     if(d.error) alert("❌ " + d.error);
-                    else { alert("✅ " + d.mensaje); document.getElementById('formStock').reset(); cargarStock(); }
+                    else { alert(d.mensaje); document.getElementById('formEditarCliente').reset(); cerrarModal('modalEditarCliente'); cargarClientes(); abrirModal('modalClientes'); setTimeout(renderizarBurbujasClientes, 500); }
                 });
             };
             if(file) comprimirImagen(file, enviar); else enviar('');
         });
 
-        // --- RESTO DE FUNCIONES (Facturas con Urgencia, Splitwise, Modales...) ---
-        function abrirGeneradorFactura(id) { 
-            const ot = otsGlobal.find(o => o.id === id); 
-            otActualId = ot.id; otActualCodigo = ot.codigo_ot; 
-            document.getElementById('factOtCode').innerText = ot.codigo_ot; 
-            document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); 
-            document.getElementById('selClienteFactura').value = ot.cliente_id || ""; 
-            actualizarInfoClienteFactura(); 
-            
-            // 🔴 AQUI APLICAMOS PRECIOS ROJOS (URGENTES) 🔴
-            let isUrg = ot.tipo_urgencia === 'Rojo'; 
-            let pDesp = isUrg ? 55.00 : 40.00; 
-            let pHora = isUrg ? 45.00 : 25.00; 
-            let txtObra = isUrg ? `Mano de Obra URGENTE (${ot.num_tecnicos} téc x ${ot.horas} hrs)` : `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`; 
-            
-            lineasFactura = [
-                { concepto: "Desplazamiento", cantidad: 1, precio: pDesp }, 
-                { concepto: txtObra, cantidad: ot.horas * ot.num_tecnicos, precio: pHora }, 
-                { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }
-            ]; 
-            renderizarTablaFactura(); 
-            abrirModal('modalFactura'); 
-        }
-
-        // Resto del código...
-        function cambiarTabGastos(tipo) { if(tipo === 'gasto') { document.getElementById('tabGasto').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #1abc9c; font-weight:bold; color:#1abc9c;"; document.getElementById('tabPago').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;"; document.getElementById('panelGasto').style.display = 'block'; document.getElementById('panelPago').style.display = 'none'; } else { document.getElementById('tabPago').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; border-bottom: 3px solid #3498db; font-weight:bold; color:#3498db;"; document.getElementById('tabGasto').style = "flex-grow: 1; text-align: center; padding:10px; cursor:pointer; color:#7f8c8d;"; document.getElementById('panelPago').style.display = 'block'; document.getElementById('panelGasto').style.display = 'none'; } }
-        function abrirGastosSocios() { fetch('/api/gastos', { headers: headersSeguridad }).then(res => res.json()).then(gastos => { renderizarDeudas(gastos); const divHistorial = document.getElementById('listaHistorialGastos'); divHistorial.innerHTML = ''; if(gastos.length === 0) divHistorial.innerHTML = '<p style="text-align:center; padding: 10px; color:#aaa;">No hay gastos registrados aún.</p>'; gastos.forEach(g => { const esPago = g.concepto.startsWith('[PAGO]'); if (esPago) { let receptor = g.implicados || 'Alguien'; divHistorial.innerHTML += `<div class="gasto-item pago-directo"><div><strong>💸 Devolución / Puesta al día</strong> <br> <small style="color:#7f8c8d;">${g.pagador} ➡️ devolvió a ➡️ ${receptor} | ${g.fecha}</small></div><div style="text-align: right;"><strong>${g.importe.toFixed(2)} €</strong><br><button class="btn-peligro" style="padding: 2px 5px; font-size: 0.8em; margin-top: 5px;" onclick="borrarGastoSocio(${g.id})">Borrar</button></div></div>`; } else { let imp = g.implicados ? g.implicados.split(',').join(', ') : 'Todos'; divHistorial.innerHTML += `<div class="gasto-item"><div><strong>🛒 ${g.concepto}</strong> <br> <small style="color:#7f8c8d;">Pagó: ${g.pagador} | Reparto: ${imp} | ${g.fecha}</small></div><div style="text-align: right;"><strong>${g.importe.toFixed(2)} €</strong><br><button class="btn-peligro" style="padding: 2px 5px; font-size: 0.8em; margin-top: 5px;" onclick="borrarGastoSocio(${g.id})">Borrar</button></div></div>`; } }); abrirModal('modalGastos'); }); }
-        function renderizarDeudas(gastos) { const socios = ['Giancarlo', 'David', 'Kevin']; let balances = { Giancarlo: 0, David: 0, Kevin: 0 }; let desglose = { Giancarlo: [], David: [], Kevin: [] }; gastos.forEach(g => { const pagador = g.pagador; const importe = parseFloat(g.importe); const esPago = g.concepto.startsWith('[PAGO]'); const implicadosStr = g.implicados || 'Giancarlo,David,Kevin'; const implicados = implicadosStr.split(','); if (esPago) { const receptor = implicados[0]; if (balances[pagador] !== undefined) balances[pagador] += importe; if (balances[receptor] !== undefined) balances[receptor] -= importe; if (desglose[pagador]) desglose[pagador].push(`<div class="linea-desglose"><span style="color:#3498db">💸 Devolviste ${importe.toFixed(2)}€</span> a ${receptor}.</div>`); if (desglose[receptor]) desglose[receptor].push(`<div class="linea-desglose"><span style="color:#3498db">📥 Recibiste ${importe.toFixed(2)}€</span> de ${pagador}.</div>`); } else { const cuota = importe / implicados.length; if (balances[pagador] !== undefined) { balances[pagador] += importe; desglose[pagador].push(`<div class="linea-desglose"><span style="color:#27ae60">🛒 Pagaste ${importe.toFixed(2)}€</span> por: ${g.concepto}</div>`); } implicados.forEach(imp => { let impName = imp.trim(); if (balances[impName] !== undefined) { balances[impName] -= cuota; if (impName !== pagador) { desglose[impName].push(`<div class="linea-desglose"><span style="color:#e74c3c">➖ Tu parte (-${cuota.toFixed(2)}€)</span> en: ${g.concepto} (Lo pagó ${pagador})</div>`); } else { desglose[impName].push(`<div class="linea-desglose"><span style="color:#7f8c8d">➖ Tu propia parte (-${cuota.toFixed(2)}€)</span> en: ${g.concepto}</div>`); } } }); } }); let deudores = []; let acreedores = []; socios.forEach(socio => { let neto = balances[socio]; if (neto < -0.01) deudores.push({ nombre: socio, cantidad: Math.abs(neto) }); else if (neto > 0.01) acreedores.push({ nombre: socio, cantidad: neto }); }); let transferencias = []; let i = 0, j = 0; while (i < deudores.length && j < acreedores.length) { let deudor = deudores[i]; let acreedor = acreedores[j]; let cantidadCruzada = Math.min(deudor.cantidad, acreedor.cantidad); transferencias.push(`<div class="deuda-linea"><span class="pagador">${deudor.nombre}</span> debe devolver a <span class="receptor">${acreedor.nombre}</span>: <strong>${cantidadCruzada.toFixed(2)} €</strong></div>`); deudor.cantidad -= cantidadCruzada; acreedor.cantidad -= cantidadCruzada; if (deudor.cantidad < 0.01) i++; if (acreedor.cantidad < 0.01) j++; } const divResumen = document.getElementById('resumenDeudas'); if (transferencias.length === 0) { divResumen.innerHTML = '<p style="color:#27ae60; font-weight:bold; font-size:1.2em;">¡Las cuentas están cuadradas a 0!</p>'; } else { divResumen.innerHTML = transferencias.join(''); } let htmlBalances = ''; socios.forEach(s => { let netoInfo = balances[s]; let colorNeto = netoInfo >= 0 ? 'bal-positivo' : 'bal-negativo'; let signo = netoInfo > 0 ? '+' : ''; let desgloseJSON = encodeURIComponent(JSON.stringify(desglose[s])); htmlBalances += `<div style="cursor:pointer; padding:10px; border-radius:8px; transition:0.2s; border: 1px solid transparent;" onmouseover="this.style.background='#f0f4f8'; this.style.borderColor='#1abc9c';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';" onclick="mostrarDesglose('${s}', '${desgloseJSON}', ${netoInfo})"><strong>${s}</strong><br>Balance: <span class="${colorNeto}">${signo}${netoInfo.toFixed(2)}€</span><br><small style="color:#3498db;">🔍 Ver detalles</small></div>`; }); document.getElementById('resumenBalances').innerHTML = htmlBalances; }
-        function mostrarDesglose(nombre, desgloseJSON, netoInfo) { document.getElementById('desgloseNombre').innerText = nombre; let colorNeto = netoInfo >= 0 ? 'green' : 'red'; let signo = netoInfo > 0 ? '+' : ''; document.getElementById('desgloseTotal').innerHTML = `<span style="color:${colorNeto}">${signo}${netoInfo.toFixed(2)} €</span>`; let operaciones = JSON.parse(decodeURIComponent(desgloseJSON)); let htmlOperaciones = operaciones.length > 0 ? operaciones.join('') : '<p style="padding:10px; text-align:center;">Aún no hay movimientos.</p>'; document.getElementById('desgloseOperaciones').innerHTML = htmlOperaciones; abrirModal('modalDesgloseSplitwise'); }
-        document.getElementById('formGastoSocio').addEventListener('submit', function(e) { e.preventDefault(); const pagador = document.getElementById('g_pagador').value; const importe = document.getElementById('g_importe').value; const concepto = document.getElementById('g_concepto').value; const checkboxes = document.querySelectorAll('input[name="chk_implicados"]:checked'); const implicados = Array.from(checkboxes).map(c => c.value); if(implicados.length === 0) { alert("❌ Marca al menos a 1 persona en el reparto."); return; } fetch('/api/gastos', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ pagador, importe, concepto, implicados }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else { document.getElementById('g_importe').value = ''; document.getElementById('g_concepto').value = ''; document.querySelectorAll('input[name="chk_implicados"]').forEach(c => c.checked = true); abrirGastosSocios(); } }); });
-        document.getElementById('formPagoSocio').addEventListener('submit', function(e) { e.preventDefault(); const emisor = document.getElementById('p_emisor').value; const receptor = document.getElementById('p_receptor').value; const importe = document.getElementById('p_importe').value; if(emisor === receptor) { alert("❌ No puedes devolverte dinero a ti mismo."); return; } fetch('/api/gastos', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ pagador: emisor, importe: importe, concepto: '[PAGO] Liquidación de deuda', implicados: [receptor] }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else { document.getElementById('p_importe').value = ''; abrirGastosSocios(); } }); });
-        function borrarGastoSocio(id) { if(confirm("¿Borrar este movimiento?")) { fetch(`/api/gastos/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(r => r.json()).then(data => { abrirGastosSocios(); }); } }
-
-        function probarEnvioCorreo() { const email = prompt("Introduce tu correo para la prueba:"); if (!email) return; alert("⏳ Enviando..."); fetch('/api/test-email', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ emailDestino: email }) }).then(r => r.json()).then(data => { if(data.error) alert("❌ " + data.error); else alert("✅ " + data.mensaje); }).catch(e => alert("❌ Error.")); }
-
-        function abrirTicketsOT(id, codigo) { otActualId = id; document.getElementById('t_codigo_ot').innerText = codigo; document.getElementById('t_file').value = ''; document.getElementById('t_importe').value = ''; document.getElementById('t_desc').value = ''; fetch(`/api/ot/${id}/adjuntos`).then(res => res.json()).then(data => { const galeria = document.getElementById('t_galeria'); galeria.innerHTML = ''; if(data.length === 0) galeria.innerHTML = '<p style="grid-column: 1/-1; color:#7f8c8d; text-align:center;">No hay tickets subidos aún.</p>'; data.forEach(t => { galeria.innerHTML += `<div class="ticket-card"><img src="${t.imagen}" class="ticket-img" onclick="window.open('${t.imagen}')"><div class="ticket-info"><strong>${t.importe} €</strong><br><small>${t.descripcion || 'Sin descripción'}</small><br><small style="color:#aaa;">${t.fecha}</small></div></div>`; }); abrirModal('modalTickets'); }); }
-        function subirTicketOT() { const file = document.getElementById('t_file').files[0]; const importe = document.getElementById('t_importe').value; const desc = document.getElementById('t_desc').value; if(!file) { alert("❌ Adjunta una foto."); return; } comprimirImagen(file, (imagenB64) => { fetch(`/api/ot/${otActualId}/adjuntos`, { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ imagen: imagenB64, importe: importe, descripcion: desc }) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("✅ " + data.mensaje); abrirTicketsOT(otActualId, document.getElementById('t_codigo_ot').innerText); cargarOTs(); } }); }); }
-
-        function cargarUsuariosParaOT() { fetch('/api/usuarios/nombres').then(res => res.json()).then(data => { const s1 = document.getElementById('selTecnicosAdd'); const s2 = document.getElementById('e_selTecnicosAdd'); const s3 = document.getElementById('ed_selTecnicosAdd'); s1.innerHTML = '<option value="">-- Seleccionar --</option>'; s2.innerHTML = '<option value="">-- Seleccionar --</option>'; if(s3) s3.innerHTML = '<option value="">-- Seleccionar --</option>'; data.forEach(u => { const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`; s1.innerHTML += opt; s2.innerHTML += opt; if(s3) s3.innerHTML += opt; }); }); }
-        function agregarTecnicoOT() { const s = document.getElementById('selTecnicosAdd'); if(s.value && !tecnicosSeleccionados.includes(s.value)) { tecnicosSeleccionados.push(s.value); renderizarTecnicosOT(); } s.value = ""; }
-        function quitarTecnicoOT(nombre) { tecnicosSeleccionados = tecnicosSeleccionados.filter(t => t !== nombre); renderizarTecnicosOT(); }
-        function renderizarTecnicosOT() { const d = document.getElementById('listaTecnicosOT'); d.innerHTML = ''; tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarTecnicoOT('${t}')">&times;</span></div>`); }
-        function agregarETecnicoOT() { const s = document.getElementById('e_selTecnicosAdd'); if(s.value && !e_tecnicosSeleccionados.includes(s.value)) { e_tecnicosSeleccionados.push(s.value); renderizarETecnicosOT(); } s.value = ""; }
-        function quitarETecnicoOT(nombre) { e_tecnicosSeleccionados = e_tecnicosSeleccionados.filter(t => t !== nombre); renderizarETecnicosOT(); }
-        function renderizarETecnicosOT() { const d = document.getElementById('e_listaTecnicosOT'); d.innerHTML = ''; e_tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarETecnicoOT('${t}')">&times;</span></div>`); }
-        function agregarEdTecnicoOT() { const s = document.getElementById('ed_selTecnicosAdd'); if(s.value && !ed_tecnicosSeleccionados.includes(s.value)) { ed_tecnicosSeleccionados.push(s.value); renderizarEdTecnicosOT(); } s.value = ""; }
-        function quitarEdTecnicoOT(nombre) { ed_tecnicosSeleccionados = ed_tecnicosSeleccionados.filter(t => t !== nombre); renderizarEdTecnicosOT(); }
-        function renderizarEdTecnicosOT() { const d = document.getElementById('ed_listaTecnicosOT'); d.innerHTML = ''; ed_tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarEdTecnicoOT('${t}')">&times;</span></div>`); }
-
-        function validarFormulario(codigo, fechaIn, fechaOut) { if (!codigo.startsWith(prefijoAnoActual)) { alert(`❌ Debe empezar por ${prefijoAnoActual}`); return false; } if (fechaOut && new Date(fechaOut) <= new Date(fechaIn)) { alert(`❌ Finalización posterior a inicio.`); return false; } return true; }
-
-        function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
-        function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
-        function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
-        function abrirModal(id) { document.getElementById(id).style.display = 'block'; cerrarMenuLateral(); }
-        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        function cargarClientes() { fetch('/api/clientes').then(res => res.json()).then(data => { clientesGlobal = data; const cAprobados = data.filter(c => c.estado === 'APROBADO'); const selOt = document.getElementById('ot_cliente_id'); selOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; const selFact = document.getElementById('selClienteFactura'); selFact.innerHTML = '<option value="">-- Seleccionar Cliente --</option>'; const selEdOt = document.getElementById('ed_ot_cliente_id'); if(selEdOt) selEdOt.innerHTML = '<option value="">-- Sin asignar / General --</option>'; cAprobados.forEach(c => { selOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; selFact.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; if(selEdOt) selEdOt.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; }); }); }
-        function renderizarBurbujasClientes() { const grid = document.getElementById('gridClientes'); grid.innerHTML = ''; const aprobados = clientesGlobal.filter(c => c.estado === 'APROBADO'); if(aprobados.length === 0) grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Aún no hay clientes.</p>'; aprobados.forEach(c => grid.innerHTML += `<div class="cliente-bubble" onclick="abrirDetalleCliente(${c.id})"><img src="${c.logo || imgClienteDef}" class="bubble-img"><div class="bubble-name">${c.nombre}</div></div>`); }
         document.getElementById('formCliente').addEventListener('submit', function(e) { e.preventDefault(); const file = document.getElementById('c_logo_file').files[0]; const enviar = (logoB64) => { fetch('/api/clientes', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ nombre: document.getElementById('c_nombre').value, nif: document.getElementById('c_nif').value, direccion: document.getElementById('c_direccion').value, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, logo: logoB64 }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); document.getElementById('formCliente').reset(); cerrarModal('modalCrearCliente'); cargarClientes(); }); }; if(file) { comprimirImagen(file, enviar); } else { enviar(''); } });
-        function abrirDetalleCliente(id) { const c = clientesGlobal.find(x => x.id === id); document.getElementById('d_c_logo').src = c.logo || imgClienteDef; document.getElementById('d_c_nombre').innerText = c.nombre; document.getElementById('d_c_nif').innerText = c.nif; document.getElementById('d_c_direccion').innerText = c.direccion; document.getElementById('d_c_tel').innerText = c.telefono || '-'; document.getElementById('d_c_email').innerText = c.email || '-'; const ots = otsGlobal.filter(ot => ot.cliente_id === id); const divOts = document.getElementById('d_c_ots'); divOts.innerHTML = ''; if(ots.length === 0) divOts.innerHTML = '<p>No hay OTs para este cliente.</p>'; ots.forEach(ot => { let color = ot.estado === 'HECHO' ? '#27ae60' : (ot.estado === 'PENDIENTE' ? '#f39c12' : '#e74c3c'); divOts.innerHTML += `<div style="border-left: 4px solid ${color}; padding: 10px; background: #fff; margin-bottom: 8px;"><strong>${ot.codigo_ot}</strong> - ${ot.marca} <span style="float:right; color:${color};">${ot.estado}</span></div>`; }); cerrarModal('modalClientes'); abrirModal('modalDetalleCliente'); }
         function abrirSolicitudesClientes() { const tbody = document.getElementById('tbodySolicitudesClientes'); tbody.innerHTML = ''; const p = clientesGlobal.filter(c => c.estado === 'PENDIENTE'); if(p.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay solicitudes</td></tr>'; p.forEach(c => tbody.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td>${c.nif}</td><td>Director</td><td><button style="background:#27ae60; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'APROBADO')">✅</button> <button style="background:#e74c3c; border:none; color:white; padding:5px; cursor:pointer;" onclick="resolverCliente(${c.id}, 'RECHAZADO')">❌</button></td></tr>`); abrirModal('modalSolicitudesClientes'); }
         function resolverCliente(id, estado) { fetch(`/api/clientes/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarClientes(); abrirSolicitudesClientes(); }); }
 
+        // --- RESTO INTACTO ---
         function cargarOTs() { fetch('/api/ot').then(res => res.json()).then(ots => { otsGlobal = ots; document.getElementById('contenedorOTs').innerHTML = ''; ots.forEach(ot => { let btnB = sesion.rol === 'tecnico' ? '' : `<button class="btn-peligro" onclick="eliminarOT(${ot.id})">🗑️</button>`; let disable = sesion.rol === 'tecnico' ? 'disabled' : ''; let btnF = ot.estado === 'HECHO' ? `<button class="btn-factura" onclick="abrirGeneradorFactura(${ot.id})">💶 Factura</button>` : ''; let btnE = sesion.rol === 'admin' ? `<button class="btn-editar" onclick="abrirEditarOT(${ot.id})">✏️</button>` : ''; let nC = ot.cliente_id ? (clientesGlobal.find(c => c.id === ot.cliente_id)?.nombre || '') : ''; let sC = nC ? `<br><small style="color:#7f8c8d;">🏢 ${nC}</small>` : ''; let sT = ot.tecnicos_nombres ? `<br><small style="color:#3498db; font-weight:bold;">👷 ${ot.tecnicos_nombres}</small>` : ''; document.getElementById('contenedorOTs').innerHTML += `<div class="ot-card"><div class="ot-info"><strong>${ot.codigo_ot}</strong> - ${ot.marca} ${sC} ${sT}<br><strong style="color:#e67e22;">Materiales/Tickets: ${ot.materiales_precio} €</strong></div><div class="actions"><select class="sel-estado ${ot.estado === 'HECHO' ? 'est-hecho' : (ot.estado === 'ANULADO' ? 'est-anulado' : 'est-pendiente')}" ${disable} onchange="cambiarEstado(${ot.id}, this)"><option value="PENDIENTE" ${ot.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option><option value="HECHO" ${ot.estado === 'HECHO' ? 'selected' : ''}>HECHO</option><option value="ANULADO" ${ot.estado === 'ANULADO' ? 'selected' : ''}>ANULADO</option></select><button class="btn-ticket" onclick="abrirTicketsOT(${ot.id}, '${ot.codigo_ot}')">🧾 Tickets</button>${btnF} ${btnE} ${btnB}</div></div>`; }); }); }
         function cambiarEstado(id, sel) { fetch(`/api/ot/${id}/estado`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ estado: sel.value }) }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
         function eliminarOT(id) { if(confirm("¿Solicitar borrado?")) fetch(`/api/ot/${id}`, { method: 'DELETE', headers: headersSeguridad }).then(res => res.json()).then(d => { alert("ℹ️ " + d.mensaje); cargarOTs(); }); }
@@ -594,6 +449,7 @@
         function abrirEditarOT(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = id; document.getElementById('ed_codigo_ot').value = ot.codigo_ot; document.getElementById('ed_ot_cliente_id').value = ot.cliente_id || ''; document.getElementById('ed_fecha_encargo').value = ot.fecha_encargo || ''; document.getElementById('ed_fecha_completada').value = ot.fecha_completada || ''; document.getElementById('ed_horas').value = ot.horas; document.getElementById('ed_marca').value = ot.marca; document.getElementById('ed_tipo_urgencia').value = ot.tipo_urgencia; document.getElementById('ed_materiales_precio').value = ot.materiales_precio; ed_tecnicosSeleccionados = ot.tecnicos_nombres ? ot.tecnicos_nombres.split(',').map(t => t.trim()) : []; renderizarEdTecnicosOT(); abrirModal('modalEditarOT'); }
         function guardarEdicionOT() { if (ed_tecnicosSeleccionados.length === 0) { alert("❌ Asigna al menos un técnico."); return; } const datos = { codigo_ot: document.getElementById('ed_codigo_ot').value, cliente_id: document.getElementById('ed_ot_cliente_id').value || null, fecha_encargo: document.getElementById('ed_fecha_encargo').value, fecha_completada: document.getElementById('ed_fecha_completada').value, horas: parseFloat(document.getElementById('ed_horas').value), num_tecnicos: ed_tecnicosSeleccionados.length, tecnicos_nombres: ed_tecnicosSeleccionados.join(', '), marca: document.getElementById('ed_marca').value, tipo_urgencia: document.getElementById('ed_tipo_urgencia').value, materiales_precio: parseFloat(document.getElementById('ed_materiales_precio').value) }; if (!validarFormulario(datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada)) return; fetch(`/api/ot/${otActualId}`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify(datos) }).then(r => r.json()).then(d => { if (d.error) alert("❌ " + d.error); else { alert(d.mensaje); cerrarModal('modalEditarOT'); cargarOTs(); } }); }
 
+        function abrirGeneradorFactura(id) { const ot = otsGlobal.find(o => o.id === id); otActualId = ot.id; otActualCodigo = ot.codigo_ot; document.getElementById('factOtCode').innerText = ot.codigo_ot; document.getElementById('factFechaHoy').innerText = new Date().toLocaleDateString('es-ES'); document.getElementById('selClienteFactura').value = ot.cliente_id || ""; actualizarInfoClienteFactura(); let isUrg = ot.tipo_urgencia === 'Rojo'; let pDesp = isUrg ? 55.00 : 40.00; let pHora = isUrg ? 45.00 : 25.00; let txtObra = isUrg ? `Mano de Obra URGENTE (${ot.num_tecnicos} téc x ${ot.horas} hrs)` : `Mano de Obra (${ot.num_tecnicos} téc x ${ot.horas} hrs)`; lineasFactura = [{ concepto: "Desplazamiento", cantidad: 1, precio: pDesp }, { concepto: txtObra, cantidad: ot.horas * ot.num_tecnicos, precio: pHora }, { concepto: "Materiales y repuestos", cantidad: 1, precio: ot.materiales_precio }]; renderizarTablaFactura(); abrirModal('modalFactura'); }
         function actualizarInfoClienteFactura() { const id = document.getElementById('selClienteFactura').value; const divPrintName = document.getElementById('printClienteNombre'); const divInfo = document.getElementById('infoClienteFacturaTexto'); if(!id) { divInfo.innerHTML = ''; divPrintName.innerText = 'Consumidor Final'; return; } const c = clientesGlobal.find(x => x.id == id); divPrintName.innerText = c.nombre; divInfo.innerHTML = `<strong>NIF/CIF:</strong> ${c.nif}<br><strong>Dir:</strong> ${c.direccion}`; }
         function renderizarTablaFactura() { const tbody = document.getElementById('tbodyLineas'); tbody.innerHTML = ''; let baseImponible = 0; lineasFactura.forEach((l, idx) => { const t = l.cantidad * l.precio; baseImponible += t; tbody.innerHTML += `<tr><td><input type="text" value="${l.concepto}" onchange="actualizarLinea(${idx}, 'concepto', this.value)"></td><td><input type="number" step="0.1" value="${l.cantidad}" onchange="actualizarLinea(${idx}, 'cantidad', this.value)"></td><td><input type="number" step="0.01" value="${l.precio}" onchange="actualizarLinea(${idx}, 'precio', this.value)"></td><td style="text-align:right;">${t.toFixed(2)} €</td><td class="no-print"><button class="btn-peligro" onclick="borrarLineaFactura(${idx})">🗑️</button></td></tr>`; }); const iva = baseImponible * 0.21; document.getElementById('factBase').innerText = baseImponible.toFixed(2); document.getElementById('factIva').innerText = iva.toFixed(2); document.getElementById('factTotal').innerText = (baseImponible + iva).toFixed(2); }
         function actualizarLinea(i, c, v) { lineasFactura[i][c] = c === 'concepto' ? v : (parseFloat(v) || 0); renderizarTablaFactura(); }
@@ -605,6 +461,25 @@
         function resolverLog(id, res) { let m = ""; if (res === 'RECHAZADO') { m = prompt("Motivo:"); if (!m) return; } fetch(`/api/logs/${id}/resolver`, { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ resolucion: res, motivo: m }) }).then(r => r.json()).then(d => { alert(d.mensaje); abrirLogs(); cargarOTs(); }); }
         function guardarPassword() { fetch('/api/usuarios/password', { method: 'PUT', headers: headersSeguridad, body: JSON.stringify({ username: sesion.username, oldPass: document.getElementById('oldPass').value, newPass: document.getElementById('newPass').value }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalPassword'); } }); }
         function crearTecnico() { const u = document.getElementById('newTecUser').value; const p = document.getElementById('newTecPass').value; if(!u || !p) return; fetch('/api/usuarios/tecnico', { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ username: u, password: p }) }).then(r => r.json()).then(d => { if(d.error) alert("❌ " + d.error); else { alert("✅ " + d.mensaje); cerrarModal('modalTecnico'); cargarUsuariosParaOT(); } }); }
+
+        function abrirTicketsOT(id, codigo) { otActualId = id; document.getElementById('t_codigo_ot').innerText = codigo; document.getElementById('t_file').value = ''; document.getElementById('t_importe').value = ''; document.getElementById('t_desc').value = ''; fetch(`/api/ot/${id}/adjuntos`).then(res => res.json()).then(data => { const galeria = document.getElementById('t_galeria'); galeria.innerHTML = ''; if(data.length === 0) galeria.innerHTML = '<p style="grid-column: 1/-1; color:#7f8c8d; text-align:center;">No hay tickets subidos aún.</p>'; data.forEach(t => { galeria.innerHTML += `<div class="ticket-card"><img src="${t.imagen}" class="ticket-img" onclick="window.open('${t.imagen}')"><div class="ticket-info"><strong>${t.importe} €</strong><br><small>${t.descripcion || 'Sin descripción'}</small><br><small style="color:#aaa;">${t.fecha}</small></div></div>`; }); abrirModal('modalTickets'); }); }
+        function subirTicketOT() { const file = document.getElementById('t_file').files[0]; const importe = document.getElementById('t_importe').value; const desc = document.getElementById('t_desc').value; if(!file) { alert("❌ Adjunta una foto."); return; } comprimirImagen(file, (imagenB64) => { fetch(`/api/ot/${otActualId}/adjuntos`, { method: 'POST', headers: headersSeguridad, body: JSON.stringify({ imagen: imagenB64, importe: importe, descripcion: desc }) }).then(res => res.json()).then(data => { if(data.error) alert("❌ " + data.error); else { alert("✅ " + data.mensaje); abrirTicketsOT(otActualId, document.getElementById('t_codigo_ot').innerText); cargarOTs(); } }); }); }
+        function cargarUsuariosParaOT() { fetch('/api/usuarios/nombres').then(res => res.json()).then(data => { const s1 = document.getElementById('selTecnicosAdd'); const s2 = document.getElementById('e_selTecnicosAdd'); const s3 = document.getElementById('ed_selTecnicosAdd'); s1.innerHTML = '<option value="">-- Seleccionar --</option>'; s2.innerHTML = '<option value="">-- Seleccionar --</option>'; if(s3) s3.innerHTML = '<option value="">-- Seleccionar --</option>'; data.forEach(u => { const opt = `<option value="${u.username}">${u.username} (${u.rol})</option>`; s1.innerHTML += opt; s2.innerHTML += opt; if(s3) s3.innerHTML += opt; }); }); }
+        function agregarTecnicoOT() { const s = document.getElementById('selTecnicosAdd'); if(s.value && !tecnicosSeleccionados.includes(s.value)) { tecnicosSeleccionados.push(s.value); renderizarTecnicosOT(); } s.value = ""; }
+        function quitarTecnicoOT(nombre) { tecnicosSeleccionados = tecnicosSeleccionados.filter(t => t !== nombre); renderizarTecnicosOT(); }
+        function renderizarTecnicosOT() { const d = document.getElementById('listaTecnicosOT'); d.innerHTML = ''; tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarTecnicoOT('${t}')">&times;</span></div>`); }
+        function agregarETecnicoOT() { const s = document.getElementById('e_selTecnicosAdd'); if(s.value && !e_tecnicosSeleccionados.includes(s.value)) { e_tecnicosSeleccionados.push(s.value); renderizarETecnicosOT(); } s.value = ""; }
+        function quitarETecnicoOT(nombre) { e_tecnicosSeleccionados = e_tecnicosSeleccionados.filter(t => t !== nombre); renderizarETecnicosOT(); }
+        function renderizarETecnicosOT() { const d = document.getElementById('e_listaTecnicosOT'); d.innerHTML = ''; e_tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarETecnicoOT('${t}')">&times;</span></div>`); }
+        function agregarEdTecnicoOT() { const s = document.getElementById('ed_selTecnicosAdd'); if(s.value && !ed_tecnicosSeleccionados.includes(s.value)) { ed_tecnicosSeleccionados.push(s.value); renderizarEdTecnicosOT(); } s.value = ""; }
+        function quitarEdTecnicoOT(nombre) { ed_tecnicosSeleccionados = ed_tecnicosSeleccionados.filter(t => t !== nombre); renderizarEdTecnicosOT(); }
+        function renderizarEdTecnicosOT() { const d = document.getElementById('ed_listaTecnicosOT'); d.innerHTML = ''; ed_tecnicosSeleccionados.forEach(t => d.innerHTML += `<div class="tecnico-badge">👤 ${t} <span onclick="quitarEdTecnicoOT('${t}')">&times;</span></div>`); }
+        function validarFormulario(codigo, fechaIn, fechaOut) { if (!codigo.startsWith(prefijoAnoActual)) { alert(`❌ Debe empezar por ${prefijoAnoActual}`); return false; } if (fechaOut && new Date(fechaOut) <= new Date(fechaIn)) { alert(`❌ Finalización posterior a inicio.`); return false; } return true; }
+        function abrirMenuLateral() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('overlayMenu').style.display = 'block'; }
+        function cerrarMenuLateral() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('overlayMenu').style.display = 'none'; }
+        function cerrarSesion() { localStorage.removeItem('sesionPlusUltra'); window.location.href = '/login'; }
+        function abrirModal(id) { document.getElementById(id).style.display = 'block'; cerrarMenuLateral(); }
+        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
         inicializarUI(); cargarClientes(); setTimeout(cargarOTs, 500);
