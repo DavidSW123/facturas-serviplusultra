@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const QRCode = require('qrcode');
 const { createClient } = require('@libsql/client');
+const { GoogleGenerativeAI } = require('@google/generative-ai'); // 🔴 Librería de IA
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,15 @@ app.get('/bbdd', (req, res) => res.sendFile(path.join(__dirname, 'bbdd.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
 const db = createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
+
+// Inicializar la IA (si hay clave)
+let genAI = null;
+if (process.env.GEMINI_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    console.log('🤖 Motor de Inteligencia Artificial conectado.');
+} else {
+    console.warn('⚠️ Falta GEMINI_API_KEY en el .env. La lectura de tickets no funcionará.');
+}
 
 async function inicializarDB() {
     try {
@@ -35,7 +45,7 @@ async function inicializarDB() {
 
         const res = await db.execute("SELECT count(*) as count FROM usuarios");
         if (res.rows[0].count === 0) { await db.execute(`INSERT INTO usuarios (username, password, rol) VALUES ('Giancarlo', 'gian123', 'admin'), ('David', 'dav123', 'director'), ('Kevin', 'kev123', 'director')`); }
-        console.log('✅ Base de datos Turso conectada y 100% operativa.');
+        console.log('✅ Base de datos Turso conectada y operativa.');
     } catch (error) { console.error('❌ Error Turso:', error); }
 }
 inicializarDB();
@@ -54,112 +64,56 @@ app.post('/api/clientes', async (req, res) => { const rol = req.headers['x-rol']
 app.put('/api/clientes/:id/estado', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo puede aprobar' }); try { await db.execute({ sql: `UPDATE clientes SET estado = ? WHERE id = ?`, args: [req.body.estado, req.params.id] }); res.json({ mensaje: `Cliente ${req.body.estado}` }); } catch (e) { res.status(500).json({ error: 'Error' }); } });
 app.put('/api/clientes/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Admin.' }); const { nombre, nif, direccion, email, telefono, logo } = req.body; try { await db.execute({ sql: `UPDATE clientes SET nombre = ?, nif = ?, direccion = ?, email = ?, telefono = ?, logo = ? WHERE id = ?`, args: [nombre, nif, direccion, email, telefono, logo || '', req.params.id] }); res.json({ mensaje: '✅ Cliente actualizado correctamente.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-app.post('/api/ot', async (req, res) => { 
-    const rol = req.headers['x-rol']; const user = req.headers['x-user']; const datos = req.body; const err = validarOT(datos); if (err) return res.status(400).json({ error: err }); 
-    let totalMateriales = 0; if (datos.lineas_materiales && datos.lineas_materiales.length > 0) { totalMateriales = datos.lineas_materiales.reduce((acc, curr) => acc + curr.importe, 0); } datos.materiales_precio = totalMateriales; 
-    if (rol === 'director') { await registrarLog(user, 'Añadir OT', datos.codigo_ot, datos, 'PENDIENTE'); return res.json({ mensaje: 'OT enviada a Giancarlo para su aprobación.' }); } 
-    const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE'; 
-    try { 
-        const r = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] }); 
-        const newOtId = Number(r.lastInsertRowid);
-        if (datos.lineas_materiales && datos.lineas_materiales.length > 0) {
-            const fMat = new Date().toLocaleString('es-ES');
-            for (let mat of datos.lineas_materiales) {
-                let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`;
-                await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [newOtId, mat.imagen || '', mat.importe, textoDesc, fMat] });
-                if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); }
-            }
-        }
-        await registrarLog(user, 'Añadir OT', `OT: ${datos.codigo_ot}`, datos, 'APROBADO'); res.json({ mensaje: 'OT y materiales guardados correctamente.', id: newOtId }); 
-    } catch (e) { if (e.message && e.message.includes('UNIQUE')) { res.status(400).json({ error: 'Ese código de OT ya está registrado.' }); } else { res.status(500).json({ error: `Fallo: ${e.message}` }); } } 
-});
-
+app.post('/api/ot', async (req, res) => { const rol = req.headers['x-rol']; const user = req.headers['x-user']; const datos = req.body; const err = validarOT(datos); if (err) return res.status(400).json({ error: err }); let totalMateriales = 0; if (datos.lineas_materiales && datos.lineas_materiales.length > 0) { totalMateriales = datos.lineas_materiales.reduce((acc, curr) => acc + curr.importe, 0); } datos.materiales_precio = totalMateriales; if (rol === 'director') { await registrarLog(user, 'Añadir OT', datos.codigo_ot, datos, 'PENDIENTE'); return res.json({ mensaje: 'OT enviada a Giancarlo para su aprobación.' }); } const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE'; try { const r = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] }); const newOtId = Number(r.lastInsertRowid); if (datos.lineas_materiales && datos.lineas_materiales.length > 0) { const fMat = new Date().toLocaleString('es-ES'); for (let mat of datos.lineas_materiales) { let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`; await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [newOtId, mat.imagen || '', mat.importe, textoDesc, fMat] }); if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); } } } await registrarLog(user, 'Añadir OT', `OT: ${datos.codigo_ot}`, datos, 'APROBADO'); res.json({ mensaje: 'OT y materiales guardados correctamente.', id: newOtId }); } catch (e) { if (e.message && e.message.includes('UNIQUE')) { res.status(400).json({ error: 'Ese código de OT ya está registrado.' }); } else { res.status(500).json({ error: `Fallo: ${e.message}` }); } } });
 app.get('/api/ot', async (req, res) => { try { const r = await db.execute("SELECT * FROM ordenes_trabajo ORDER BY id DESC"); res.json(r.rows); } catch (e) { res.status(500).json({ error: `Fallo: ${e.message}` }); } });
 app.put('/api/ot/:id/estado', async (req, res) => { const rol = req.headers['x-rol']; const user = req.headers['x-user']; const { estado } = req.body; const { id } = req.params; if (rol === 'director') { await registrarLog(user, 'Editar OT', `Cambio estado OT ID: ${id}`, { id, nuevoEstado: estado }, 'PENDIENTE'); return res.json({ mensaje: 'Petición enviada a Giancarlo.' }); } try { await db.execute({ sql: `UPDATE ordenes_trabajo SET estado = ? WHERE id = ?`, args: [estado, id] }); await registrarLog(user, 'Editar OT', `Estado cambiado OT: ${id}`, { id, nuevoEstado: estado }, 'APROBADO'); res.json({ mensaje: 'Estado actualizado' }); } catch (e) { res.status(500).json({ error: e.message }); } });
-
-app.put('/api/ot/:id', async (req, res) => {
-    if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo puede editar una OT.' });
-    const { id } = req.params; const datos = req.body; const err = validarOT(datos); if (err) return res.status(400).json({ error: err });
-    try { 
-        await db.execute({ sql: `UPDATE ordenes_trabajo SET codigo_ot = ?, fecha_encargo = ?, fecha_completada = ?, horas = ?, num_tecnicos = ?, marca = ?, tipo_urgencia = ?, cliente_id = ?, tecnicos_nombres = ? WHERE id = ?`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.cliente_id || null, datos.tecnicos_nombres || '', id] }); 
-        await registrarLog(req.headers['x-user'], 'Editar OT', `OT: ${datos.codigo_ot} modificada directamente`, datos, 'APROBADO'); 
-        res.json({ mensaje: '✅ Orden de Trabajo actualizada con éxito.' }); 
-    } 
-    catch (e) { if (e.message && e.message.includes('UNIQUE')) res.status(400).json({ error: 'Ese código de OT ya está registrado.' }); else res.status(500).json({ error: e.message }); }
-});
-
+app.put('/api/ot/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo puede editar una OT.' }); const { id } = req.params; const datos = req.body; const err = validarOT(datos); if (err) return res.status(400).json({ error: err }); try { await db.execute({ sql: `UPDATE ordenes_trabajo SET codigo_ot = ?, fecha_encargo = ?, fecha_completada = ?, horas = ?, num_tecnicos = ?, marca = ?, tipo_urgencia = ?, cliente_id = ?, tecnicos_nombres = ? WHERE id = ?`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.cliente_id || null, datos.tecnicos_nombres || '', id] }); await registrarLog(req.headers['x-user'], 'Editar OT', `OT: ${datos.codigo_ot} modificada directamente`, datos, 'APROBADO'); res.json({ mensaje: '✅ Orden de Trabajo actualizada con éxito.' }); } catch (e) { if (e.message && e.message.includes('UNIQUE')) res.status(400).json({ error: 'Ese código de OT ya está registrado.' }); else res.status(500).json({ error: e.message }); } });
 app.delete('/api/ot/:id', async (req, res) => { const rol = req.headers['x-rol']; const user = req.headers['x-user']; const { id } = req.params; if (rol === 'director') { await registrarLog(user, 'Eliminar OT', `Borrado OT ID: ${id}`, { id }, 'PENDIENTE'); return res.json({ mensaje: 'Petición enviada a Giancarlo.' }); } if (rol !== 'admin') return res.status(403).json({ error: 'Sin permisos.' }); try { await db.execute({ sql: `DELETE FROM facturas WHERE ot_id = ?`, args: [id] }); await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE ot_id = ?`, args: [id] }); await db.execute({ sql: `DELETE FROM ordenes_trabajo WHERE id = ?`, args: [id] }); await registrarLog(user, 'Eliminar OT', `OT: ${id} eliminada`, { id }, 'APROBADO'); res.json({ mensaje: 'Eliminada' }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-// --- GESTIÓN DE MATERIALES (ADJUNTOS) ---
 app.get('/api/ot/:id/adjuntos', async (req, res) => { try { const r = await db.execute({ sql: "SELECT * FROM ot_adjuntos WHERE ot_id = ? ORDER BY id DESC", args: [req.params.id] }); res.json(r.rows); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/ot/:id/adjuntos', async (req, res) => { const ot_id = req.params.id; const { imagen, importe, descripcion } = req.body; const fecha = new Date().toLocaleString('es-ES'); try { await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, imagen, parseFloat(importe) || 0, descripcion || '', fecha] }); if (parseFloat(importe) > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [parseFloat(importe), ot_id] }); } res.json({ mensaje: 'Ticket guardado y sumado.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/ot/:id/lineas_materiales', async (req, res) => { const ot_id = req.params.id; const lineas = req.body.lineas_materiales; let totalSuma = 0; const fMat = new Date().toLocaleString('es-ES'); try { for (let mat of lineas) { let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`; await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, mat.imagen || '', mat.importe, textoDesc, fMat] }); if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); } totalSuma += mat.importe; } if (totalSuma > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [totalSuma, ot_id] }); } res.json({ mensaje: 'Nuevas líneas añadidas.' }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.delete('/api/ot/adjuntos/:id', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Admin.' }); const { id } = req.params; try { const r = await db.execute({ sql: `SELECT ot_id, importe FROM ot_adjuntos WHERE id = ?`, args: [id] }); if (r.rows.length > 0) { const { ot_id, importe } = r.rows[0]; await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE id = ?`, args: [id] }); await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio - ? WHERE id = ?`, args: [importe, ot_id] }); res.json({ mensaje: 'Línea/Ticket eliminado.' }); } else { res.status(404).json({ error: 'No encontrado' }); } } catch(e) { res.status(500).json({ error: e.message }); } });
 
-app.post('/api/ot/:id/adjuntos', async (req, res) => { 
-    const ot_id = req.params.id; const { imagen, importe, descripcion } = req.body; const fecha = new Date().toLocaleString('es-ES'); 
-    try { 
-        await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, imagen, parseFloat(importe) || 0, descripcion || '', fecha] }); 
-        if (parseFloat(importe) > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [parseFloat(importe), ot_id] }); } 
-        res.json({ mensaje: 'Ticket/Material guardado y sumado.' }); 
-    } catch (e) { res.status(500).json({ error: e.message }); } 
-});
-
-// 🔴 NUEVO: AÑADIR VARIAS LÍNEAS DE MATERIAL A LA VEZ A UNA OT EXISTENTE 🔴
-app.post('/api/ot/:id/lineas_materiales', async (req, res) => {
-    const ot_id = req.params.id; const lineas = req.body.lineas_materiales; let totalSuma = 0; const fMat = new Date().toLocaleString('es-ES');
+// 🔴 RUTA MÁGICA: ESCANEO DE TICKETS POR IA 🔴
+app.post('/api/ia/escanear-ticket', async (req, res) => {
+    if (!genAI) return res.status(500).json({ error: 'El motor de IA no está configurado (Falta GEMINI_API_KEY en .env)' });
+    
     try {
-        for (let mat of lineas) {
-            let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`;
-            await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [ot_id, mat.imagen || '', mat.importe, textoDesc, fMat] });
-            if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); }
-            totalSuma += mat.importe;
-        }
-        if (totalSuma > 0) { await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio + ? WHERE id = ?`, args: [totalSuma, ot_id] }); }
-        res.json({ mensaje: 'Nuevas líneas de materiales añadidas correctamente a la OT.' });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
+        const { imagenBase64 } = req.body;
+        // Limpiar el prefijo de base64 para Google
+        const b64Limpio = imagenBase64.replace(/^data:image\/\w+;base64,/, "");
 
-// 🔴 NUEVO: BORRAR UN MATERIAL/TICKET Y RESTARLO DE LA OT 🔴
-app.delete('/api/ot/adjuntos/:id', async (req, res) => {
-    if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Admin.' });
-    const { id } = req.params;
-    try {
-        const r = await db.execute({ sql: `SELECT ot_id, importe FROM ot_adjuntos WHERE id = ?`, args: [id] });
-        if (r.rows.length > 0) {
-            const { ot_id, importe } = r.rows[0];
-            await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE id = ?`, args: [id] });
-            await db.execute({ sql: `UPDATE ordenes_trabajo SET materiales_precio = materiales_precio - ? WHERE id = ?`, args: [importe, ot_id] });
-            res.json({ mensaje: 'Línea/Ticket eliminado correctamente. OT Recalculada.' });
-        } else { res.status(404).json({ error: 'No encontrado' }); }
-    } catch(e) { res.status(500).json({ error: e.message }); }
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Actúa como un contable experto. Analiza la imagen de este ticket o factura. 
+        Extrae cada producto comprado. 
+        Devuelve ÚNICAMENTE un array en formato JSON con esta estructura exacta para cada línea:
+        [{"descripcion": "nombre del producto", "cantidad": 1, "precio": 10.50}]
+        Notas importantes:
+        - Si no encuentras la cantidad, pon 1.
+        - El 'precio' debe ser el precio total de esa línea (cantidad * precio unitario).
+        - Solo quiero el texto del JSON crudo, sin bloques de código ni markdown. No escribas \`\`\`json.`;
+
+        const imageParts = [{ inlineData: { data: b64Limpio, mimeType: "image/jpeg" } }];
+        
+        const result = await model.generateContent([prompt, ...imageParts]);
+        const response = await result.response;
+        let textoFinal = response.text();
+        
+        // Limpiamos la respuesta por si la IA es rebelde y mete markdown
+        textoFinal = textoFinal.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const jsonLineas = JSON.parse(textoFinal);
+        res.json({ lineas: jsonLineas });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'La IA no pudo entender la imagen. Asegúrate de que se vea clara.' });
+    }
 });
 
 app.get('/api/logs', async (req, res) => { try { const r = await db.execute("SELECT * FROM logs ORDER BY id DESC"); res.json(r.rows); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.put('/api/logs/:id', async (req, res) => { if (req.body.nuevosDatos.codigo_ot) { const err = validarOT(req.body.nuevosDatos); if (err) return res.status(400).json({ error: err }); } await db.execute({ sql: `UPDATE logs SET datos = ? WHERE id = ?`, args: [JSON.stringify(req.body.nuevosDatos), req.params.id] }); res.json({ mensaje: 'Petición actualizada.' }); });
-
-app.put('/api/logs/:id/resolver', async (req, res) => {
-    if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo.' });
-    const { id } = req.params; const { resolucion, motivo } = req.body;
-    try {
-        const rLog = await db.execute({ sql: `SELECT * FROM logs WHERE id = ?`, args: [id] }); if (rLog.rows.length === 0) return res.status(404).json({ error: 'Log no encontrado' }); const log = rLog.rows[0];
-        if (resolucion === 'RECHAZADO') { await db.execute({ sql: `UPDATE logs SET estado = 'RECHAZADO', referencia = ? WHERE id = ?`, args: [`Rechazado: ${motivo}`, id] }); return res.json({ mensaje: 'Rechazada' }); }
-        const datos = JSON.parse(log.datos);
-        if (log.accion === 'Añadir OT') { 
-            const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE'; 
-            const rIn = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] });
-            const newOtId = Number(rIn.lastInsertRowid);
-            if (datos.lineas_materiales && datos.lineas_materiales.length > 0) {
-                const fMat = new Date().toLocaleString('es-ES');
-                for (let mat of datos.lineas_materiales) {
-                    let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`;
-                    await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [newOtId, mat.imagen || '', mat.importe, textoDesc, fMat] });
-                    if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); }
-                }
-            }
-        } else if (log.accion === 'Eliminar OT') { await db.execute({ sql: `DELETE FROM facturas WHERE ot_id = ?`, args: [datos.id] }); await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE ot_id = ?`, args: [datos.id] }); await db.execute({ sql: `DELETE FROM ordenes_trabajo WHERE id = ?`, args: [datos.id] });
-        } else if (log.accion === 'Editar OT') { await db.execute({ sql: `UPDATE ordenes_trabajo SET estado = ? WHERE id = ?`, args: [datos.nuevoEstado, datos.id] }); }
-        await db.execute({ sql: `UPDATE logs SET estado = 'APROBADO', referencia = ? WHERE id = ?`, args: [`APROBADO`, id] }); res.json({ mensaje: 'Petición ejecutada' });
-    } catch (e) { res.status(500).json({ error: `Error resolviendo: ${e.message}` }); }
-});
-
+app.put('/api/logs/:id/resolver', async (req, res) => { if (req.headers['x-rol'] !== 'admin') return res.status(403).json({ error: 'Solo Giancarlo.' }); const { id } = req.params; const { resolucion, motivo } = req.body; try { const rLog = await db.execute({ sql: `SELECT * FROM logs WHERE id = ?`, args: [id] }); if (rLog.rows.length === 0) return res.status(404).json({ error: 'Log no encontrado' }); const log = rLog.rows[0]; if (resolucion === 'RECHAZADO') { await db.execute({ sql: `UPDATE logs SET estado = 'RECHAZADO', referencia = ? WHERE id = ?`, args: [`Rechazado: ${motivo}`, id] }); return res.json({ mensaje: 'Rechazada' }); } const datos = JSON.parse(log.datos); if (log.accion === 'Añadir OT') { const estado = datos.fecha_completada ? 'HECHO' : 'PENDIENTE'; const rIn = await db.execute({ sql: `INSERT INTO ordenes_trabajo (codigo_ot, fecha_encargo, fecha_completada, horas, num_tecnicos, marca, tipo_urgencia, materiales_precio, estado, cliente_id, tecnicos_nombres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [datos.codigo_ot, datos.fecha_encargo, datos.fecha_completada || null, datos.horas, datos.num_tecnicos, datos.marca, datos.tipo_urgencia, datos.materiales_precio, estado, datos.cliente_id || null, datos.tecnicos_nombres || ''] }); const newOtId = Number(rIn.lastInsertRowid); if (datos.lineas_materiales && datos.lineas_materiales.length > 0) { const fMat = new Date().toLocaleString('es-ES'); for (let mat of datos.lineas_materiales) { let textoDesc = mat.is_stock ? `[STOCK] ${mat.descripcion} (Cant: ${mat.cantidad})` : `${mat.descripcion} (Cant: ${mat.cantidad})`; await db.execute({ sql: `INSERT INTO ot_adjuntos (ot_id, imagen, importe, descripcion, fecha) VALUES (?, ?, ?, ?, ?)`, args: [newOtId, mat.imagen || '', mat.importe, textoDesc, fMat] }); if (mat.is_stock && mat.stock_id) { await db.execute({ sql: `UPDATE stock_materiales SET cantidad = cantidad - ? WHERE id = ?`, args: [mat.cantidad, mat.stock_id] }); } } } } else if (log.accion === 'Eliminar OT') { await db.execute({ sql: `DELETE FROM facturas WHERE ot_id = ?`, args: [datos.id] }); await db.execute({ sql: `DELETE FROM ot_adjuntos WHERE ot_id = ?`, args: [datos.id] }); await db.execute({ sql: `DELETE FROM ordenes_trabajo WHERE id = ?`, args: [datos.id] }); } else if (log.accion === 'Editar OT') { await db.execute({ sql: `UPDATE ordenes_trabajo SET estado = ? WHERE id = ?`, args: [datos.nuevoEstado, datos.id] }); } await db.execute({ sql: `UPDATE logs SET estado = 'APROBADO', referencia = ? WHERE id = ?`, args: [`APROBADO`, id] }); res.json({ mensaje: 'Petición ejecutada' }); } catch (e) { res.status(500).json({ error: `Error resolviendo: ${e.message}` }); } });
 app.post('/api/factura', async (req, res) => { const { ot_id, codigo_ot, base_imponible, iva, total } = req.body; const fecha = new Date().toISOString().split('T')[0]; const txt = `NIF:B-26892760|FacturaRef:${codigo_ot}|Fecha:${fecha}|Total:${total}EUR`; try { const qr = await QRCode.toDataURL(txt); await db.execute({ sql: `INSERT INTO facturas (ot_id, base_imponible, iva, total, qr_data, fecha_emision) VALUES (?, ?, ?, ?, ?, ?)`, args: [ot_id, base_imponible, iva, total, qr, fecha] }); res.status(200).json({ mensaje: 'Factura emitida', qr_data: qr }); } catch (e) { res.status(500).json({ error: 'Error QR.' }); } });
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwi8cCg4D0mGEK_Xh3V52AHMf31ESpvEbfmXgLNSw-k9GMt9_wauc3GicRqUvT9AkEow/exec";
